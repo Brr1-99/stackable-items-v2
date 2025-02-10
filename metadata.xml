@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+    <name>stackable items mod v2</name>
+    <directory>stackable items v2</directory>
+    <id>3421182565</id>
+    <description>
+[h1]Description[/h1]
+This mod is an updated version from the original stackable items mod which adds new stackable items
+https://steamcommunity.com/sharedfiles/filedetails/?id=3063257113
+[h1]Shout-out to kdogjake in the first place for creating the mod and for letting people update it ❤️[/h1]
+[h2]NOW WITH MOD CONFIG MENU SUPPORT! + REPENTOGON[/h2]
+[h2]NOW WITH DESCRIPTIONS COMPATIBLE WITH EXTERNAL ITEM DESCRIPTIONS![/h2]
+
+[h1]Old Items[/h1]
+- Cursed Eye 
+- Car Battery
+- Loki's Horns (does not stack infinitely)
+- Giant Cell (WIP)
+- X-Ray Vision (does not stack infinitely)
+- Isaac's Tomb
+- Heartbreak
+- Card Reading (does not stack infinitely)
+- Guppy's Tail
+- Cracked Orb (does not stack infinitely)
+- Schoolbag (does not stack infinitely)
+- Infestation
+- Infestation 2
+- Jumper Cables (does not stack infinitely) (WIP)
+- Eye Sore (WIP)
+- Empty Heart
+- 9 Volt
+- Bloody Lust (WIP)
+- Bloody Gust (WIP)
+- Lusty Blood (WIP)
+- The Stairway (does not stack infinitely)
+- Scapular (WIP)
+- Gnawed Leaf (WIP)
+- Linger Bean
+- Godhead
+- No. 2 (WIP)
+- Tiny Planet
+- Mom's Key (WIP)
+- Serpent's Kiss
+
+[h1]New Items(Mod v2)[/h1]
+[h1]Compatible with multiple players[/h1]
+- Mysterious Liquid
+- Hungry Soul
+- Anemic
+- Pupula Duplex
+- Spoon Bender
+- Toxic Shock
+- Spelunker Hat (does not stack infinitely)
+- PHD (does not stack infinitely)
+- Virgo (does not stack infinitely)
+- Lucky Foot (does not stack infinitely)
+- Lump of Coal
+- Chocolate Milk 
+(Currently working on Rubber Cement and a few more items, also making old items compatible with multiple players)
+
+[h2]Check out Hutts’ video on the mod here![/h2]
+https://youtu.be/CShMxC-pfMA?si=-DBtW0t3D2tMEWcz
+
+[h1]Credits:[/h1]
+- kdogjake - Original Mod Creator https://twitter.com/kd0gjake
+- Hutts - Original Mod Idea
+- TheTurtleMelon - Ideas &amp; Mod Thumbnail
+- PixelPlz - Boss rush and Hush door code for X-Ray vision</description>
+    <version>2.17</version>
+    <visibility>Public</visibility>
+    <tag id="Lua"/>
+    <tag id="Items"/>
+    <tag id="Tweaks"/>
+    <tag id="Update"/>
+</metadata>
