@@ -1,6 +1,6 @@
 local json = require("json")
 
-local mod = RegisterMod("StackableItems", 1)
+local mod = RegisterMod("Stackable Items Mod v2", 1)
 
 -- Mod Config Menu Support
 local MOD_NAME = "Stackable Items Mod v2"
@@ -50,50 +50,49 @@ local settings = {
     chocolate_milk = true,
 }
 
-local items = {
-    "Cursed Eye", -- ✅
-    "Car Battery", -- ✅
-    "Loki Horns", -- ✅
-    "Isaacs Tomb", -- ✅
-    "Heartbreak", -- ✅
-    "Giant Cell",
-    "Xray Vision", -- ✅
-    "Guppys Tail", -- ✅
-    "Cracked Orb", -- ✅
-    "Card Reading", -- ✅
-    "Infestation",
-    "Infestation Two", -- ✅
-    "Schoolbag", -- ✅ Fix: Active item does not disappear when moving item to pocke slot
-    "Stairway", -- ✅
-    "Eye Sores", -- ✅
-    "Jumper Cables",
-    "Empty Heart",
-    "Nine Volt", -- ✅
-    "Lusty Blood",
-    "Stairway", -- ✅
-    "Bloody Lust",
-    "Bloody Gust",
-    "Scapular",
-    "Gnawed Leaf",
-    "Linger Bean", -- ✅
-    "Godhead", -- ✅
-    "No. 2",
-    "Tiny Planet", -- ✅
-    "Mom's Key",
-    "Serpent's Kiss", -- ✅
-    --------------
-    "Mysterious Liquid", -- ✅
-    "Hungry Soul", -- ✅
-    "Anemic", -- ✅
-    "Pupula Duplex", -- ✅
-    "Spoon Bender", -- ✅
-    "Toxic Shock", -- ✅
-    "Spelunker Hat", -- ✅
-    "PHD", -- ✅
-    "Virgo", -- ✅
-    "Lucky Foot", -- ✅
-    "Lump of Coal", -- ✅
-    "Chocolate Milk", -- ✅
+local translation = {
+    cursed_eye = "Cursed Eye",
+    car_battery = "Car Battery",
+    loki_horns = "Loki Horns",
+    isaacs_tomb = "Isaacs Tomb",
+    heartbreak = "Heartbreak",
+    giant_cell = "Giant Cell",
+    xray_vision = "Xray Vision",
+    guppys_tail = "Guppys Tail",
+    cracked_orb = "Cracked Orb",
+    card_reading = "Card Reading",
+    infestation = "Infestation", -- 🚫
+    infestation_two = "Infestation Two",
+    schoolbag = "Schoolbag", -- 🚫 Fix: Active item does not disappear when moving item to pocket slot
+    stairway = "Stairway",
+    eye_sores = "Eye Sores",
+    jumper_cables = "Jumper Cables",
+    empty_heart = "Empty Heart", -- 🚫
+    nine_volt = "Nine Volt",
+    lusty_blood = "Lusty Blood", -- 🚫
+    bloody_lust = "Bloody Lust", -- 🚫
+    bloody_gust = "Bloody Gust", -- 🚫
+    scapular = "Scapular", -- 🚫
+    gnawed_leaf = "Gnawed Leaf", -- 🚫
+    linger_bean = "Linger Bean",
+    godhead = "Godhead",
+    number_two = "No. 2", -- 🚫
+    tiny_planet = "Tiny Planet",
+    moms_key = "Mom's Key", -- 🚫
+    serpents_kiss = "Serpent's Kiss",
+    ----------
+    mysterious_liquid = "Mysterious Liquid",
+    hungry_soul = "Hungry Soul",
+    anemic = "Anemic",
+    pupula_duplex = "Pupula Duplex",
+    spoon_bender = "Spoon Bender",
+    toxic_shock = "Toxic Shock",
+    spelunker_hat = "Spelunker Hat",
+    phd = "PHD",
+    virgo = "Virgo",
+    lucky_foot = "Lucky Foot",
+    lump_of_coal = "Lump of Coal",
+    chocolate_milk = "Chocolate Milk",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -118,67 +117,29 @@ function mod:setupMyModConfigMenuSettings()
     ModConfigMenu.AddText(MOD_NAME, "Info", function() return MOD_NAME end)
     ModConfigMenu.AddSpace(MOD_NAME, "Info")
     ModConfigMenu.AddText(MOD_NAME, "Info", function() return "Version " .. VERSION end)
-    ModConfigMenu.AddText(MOD_NAME, "Info", "Follow me on Twitter @kd0gjake")
 
-    ModConfigMenu.AddSetting(
-    "Stackable Items Mod",
-    "Items",
-    {
-        Type = ModConfigMenu.OptionType.BOOLEAN,
-        CurrentSetting = function()
-            return settings.cursed_eye
-        end,
-        Display = function()
-            return "Cursed Eye Stacking: " .. (settings.cursed_eye and "on" or "off")
-        end,
-        OnChange = function(b)
-            settings.cursed_eye = b
-            save()
-        end,
-        Info = { -- This can also be a function instead of a table
-            "Enables/disables stacking for Cursed Eye"
+    for item, name in pairs(translation) do
+        ModConfigMenu.AddSetting(
+        "Stackable Items Mod v2",
+        "Items",
+        {
+            Type = ModConfigMenu.OptionType.BOOLEAN,
+            CurrentSetting = function()
+                return item
+            end,
+            Display = function()
+                return name .. " Stacking: " .. (item and "on" or "off")
+            end,
+            OnChange = function(b)
+                item = b
+                save()
+            end,
+            Info = {
+                "Enables/disables stacking for " .. name
+            }
         }
-    }
-)
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.car_battery end, Display = function() return "Car Battery Stacking: "..(settings.car_battery and "on" or "off") end, OnChange = function(b) settings.car_battery = b save() end, Info = {"Enables/disables stacking for Car Battery"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.lokis_horns end, Display = function() return "Loki Horns Stacking: "..(settings.loki_horns and "on" or "off") end, OnChange = function(b) settings.lokis_horns = b save() end, Info = {"Enables/disables stacking for Loki Horns"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.isaacs_tomb end, Display = function() return "Isaacs Tomb Stacking: "..(settings.isaacs_tomb and "on" or "off") end, OnChange = function(b) settings.isaacs_tomb = b save() end, Info = {"Enables/disables stacking for Isaacs Tomb"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.heartbreak end, Display = function() return "Heartbreak Stacking: "..(settings.heartbreak and "on" or "off") end, OnChange = function(b) settings.heartbreak = b save() end, Info = {"Enables/disables stacking for Heartbreak"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.giant_cell end, Display = function() return "Giant Cell Stacking: "..(settings.giant_cell and "on" or "off") end, OnChange = function(b) settings.giant_cell = b save() end, Info = {"Enables/disables stacking for Giant Cell"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.xray_vision end, Display = function() return "Xray Vision Stacking: "..(settings.xray_vision and "on" or "off") end, OnChange = function(b) settings.xray_vision = b save() end, Info = {"Enables/disables stacking for Xray Vision"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.guppys_tail end, Display = function() return "Guppy's Tail Stacking: "..(settings.guppys_tail and "on" or "off") end, OnChange = function(b) settings.guppys_tail = b save() end, Info = {"Enables/disables stacking for Guppy's Tail"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.cracked_orb end, Display = function() return "Cracked Orb Stacking: "..(settings.cracked_orb and "on" or "off") end, OnChange = function(b) settings.cracked_orb = b save() end, Info = {"Enables/disables stacking for Cracked Orb"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.card_reading end, Display = function() return "Card Reading Stacking: "..(settings.card_reading and "on" or "off") end, OnChange = function(b) settings.card_reading = b save() end, Info = {"Enables/disables stacking for Card Reading"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.infestation end, Display = function() return "Infestation Stacking: "..(settings.infestation and "on" or "off") end, OnChange = function(b) settings.infestation = b save() end, Info = {"Enables/disables stacking for Infestation"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.infestation_two end, Display = function() return "Infestation Two Stacking: "..(settings.infestation_two and "on" or "off") end, OnChange = function(b) settings.infestation_two = b save() end, Info = {"Enables/disables stacking for Infestation Two"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.schoolbag end, Display = function() return "Schoolbag Stacking: "..(settings.schoolbag and "on" or "off") end, OnChange = function(b) settings.schoolbag = b save() end, Info = {"Enables/disables stacking for Schoolbag"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.stairway end, Display = function() return "Stairway Stacking: "..(settings.stairway and "on" or "off") end, OnChange = function(b) settings.stairway = b save() end, Info = {"Enables/disables stacking for Stairway"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.eye_sores end, Display = function() return "Eye Sores Stacking: "..(settings.eye_sores and "on" or "off") end, OnChange = function(b) settings.eye_sores = b save() end, Info = {"Enables/disables stacking for Eye Sores"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.jumper_cables end, Display = function() return "Jumper Cables Stacking: "..(settings.jumper_cables and "on" or "off") end, OnChange = function(b) settings.jumper_cables = b save() end, Info = {"Enables/disables stacking for Jumper Cables"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.empty_heart end, Display = function() return "Empty Heart Stacking: "..(settings.empty_heart and "on" or "off") end, OnChange = function(b) settings.empty_heart = b save() end, Info = {"Enables/disables stacking for Empty Heart"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.nine_volt end, Display = function() return "Nine Volt Stacking: "..(settings.nine_volt and "on" or "off") end, OnChange = function(b) settings.nine_volt = b save() end, Info = {"Enables/disables stacking for Nine Volt"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.lusty_blood end, Display = function() return "Lusty Blood Stacking: "..(settings.lusty_blood and "on" or "off") end, OnChange = function(b) settings.lusty_blood = b save() end, Info = {"Enables/disables stacking for Lusty Blood"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.bloody_lust end, Display = function() return "Bloody Lust Stacking: "..(settings.bloody_lust and "on" or "off") end, OnChange = function(b) settings.bloody_lust = b save() end, Info = {"Enables/disables stacking for Bloody Lust"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.bloody_gust end, Display = function() return "Bloody Gust Stacking: "..(settings.bloody_gust and "on" or "off") end, OnChange = function(b) settings.bloody_gust = b save() end, Info = {"Enables/disables stacking for Bloody Gust"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.scapular end, Display = function() return "Scapular Stacking: "..(settings.scapular and "on" or "off") end, OnChange = function(b) settings.scapular = b save() end, Info = {"Enables/disables stacking for Scapular"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.gnawed_leaf end, Display = function() return "Gnawed Leaf Stacking: "..(settings.gnawed_leaf and "on" or "off") end, OnChange = function(b) settings.gnawed_leaf = b save() end, Info = {"Enables/disables stacking for Gnawed Leaf"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.linger_bean end, Display = function() return "Linger Bean Stacking: "..(settings.linger_bean and "on" or "off") end, OnChange = function(b) settings.linger_bean = b save() end, Info = {"Enables/disables stacking for Linger Bean"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.godhead end, Display = function() return "Godhead Stacking: "..(settings.godhead and "on" or "off") end, OnChange = function(b) settings.godhead = b save() end, Info = {"Enables/disables stacking for Godhead"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.number_two end, Display = function() return "No. 2 Stacking: "..(settings.number_two and "on" or "off") end, OnChange = function(b) settings.number_two = b save() end, Info = {"Enables/disables stacking for No. 2"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.tiny_planet end, Display = function() return "Tiny Planet Stacking: "..(settings.tiny_planet and "on" or "off") end, OnChange = function(b) settings.tiny_planet = b save() end, Info = {"Enables/disables stacking for Tiny Planet"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.serpents_kiss end, Display = function() return "Serpent's Kiss Stacking: "..(settings.serpents_kiss and "on" or "off") end, OnChange = function(b) settings.serpents_kiss = b save() end, Info = {"Enables/disables stacking for Serpent's Kiss"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.mysterious_liquid end, Display = function() return "Mysterious Liquid Stacking: "..(settings.mysterious_liquid and "on" or "off") end, OnChange = function(b) settings.mysterious_liquid = b save() end, Info = {"Enables/disables stacking for Mysterious Liquid"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.hungry_soul end, Display = function() return "Hungry Soul Stacking: "..(settings.hungry_soul and "on" or "off") end, OnChange = function(b) settings.hungry_soul = b save() end, Info = {"Enables/disables stacking for Hungry Soul"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.anemic end, Display = function() return "Anemic Stacking: "..(settings.anemic and "on" or "off") end, OnChange = function(b) settings.anemic = b save() end, Info = {"Enables/disables stacking for Anemic"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.pupula_duplex end, Display = function() return "Pupula Duplex Stacking: "..(settings.pupula_duplex and "on" or "off") end, OnChange = function(b) settings.pupula_duplex = b save() end, Info = {"Enables/disables stacking for Pupula Duplex"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.spoon_bender end, Display = function() return "Spoon Bender Stacking: "..(settings.spoon_bender and "on" or "off") end, OnChange = function(b) settings.spoon_bender = b save() end, Info = {"Enables/disables stacking for Spoon Bender"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.toxic_shock end, Display = function() return "Toxic Shock Stacking: "..(settings.toxic_shock and "on" or "off") end, OnChange = function(b) settings.toxic_shock = b save() end, Info = {"Enables/disables stacking for Toxic Shock"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.spelunker_hat end, Display = function() return "Spelunker Hat Stacking: "..(settings.spelunker_hat and "on" or "off") end, OnChange = function(b) settings.spelunker_hat = b save() end, Info = {"Enables/disables stacking for Spelunker Hat"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.phd end, Display = function() return "PHD Stacking: "..(settings.phd and "on" or "off") end, OnChange = function(b) settings.phd = b save() end, Info = {"Enables/disables stacking for PHD"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.virgo end, Display = function() return "Virgo Stacking: "..(settings.virgo and "on" or "off") end, OnChange = function(b) settings.virgo = b save() end, Info = {"Enables/disables stacking for Virgo"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.lucky_foot end, Display = function() return "Lucky Foot Stacking: "..(settings.lucky_foot and "on" or "off") end, OnChange = function(b) settings.lucky_foot = b save() end, Info = {"Enables/disables stacking for Lucky Foot"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.lump_of_coal end, Display = function() return "Lump of Coal Stacking: "..(settings.lump_of_coal and "on" or "off") end, OnChange = function(b) settings.lump_of_coal = b save() end, Info = {"Enables/disables stacking for Lump of Coal"}})
-    ModConfigMenu.AddSetting("Stackable Items Mod","Items",{Type = ModConfigMenu.OptionType.BOOLEAN, CurrentSetting = function() return settings.chocolate_milk end, Display = function() return "Chocolate Milk Stacking: "..(settings.chocolate_milk and "on" or "off") end, OnChange = function(b) settings.chocolate_milk = b save() end, Info = {"Enables/disables stacking for Chocolate Milk"}})
+    )
+    end
     load()
 end
 
