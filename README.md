@@ -1,3 +1,5 @@
+[![Steam Downloads](https://img.shields.io/steam/downloads/836319872?color=blue&label=Downloads&logo=steam&logoColor=white?label=Steam%20Downloads)](https://steamcommunity.com/sharedfiles/filedetails/?id=3421182565)
+
 # Stackable Items Mod v2
 The Binding of Isaac Mod that implements synergies on stacking items
 
