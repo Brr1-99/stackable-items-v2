@@ -25,21 +25,20 @@ https://steamcommunity.com/sharedfiles/filedetails/?id=3063257113
 - Schoolbag (does not stack infinitely)
 - Infestation
 - Infestation 2
-- Jumper Cables (does not stack infinitely) (WIP)
-- Eye Sore (WIP)
+- Jumper Cables (does not stack infinitely)
+- Eye Sore
 - Empty Heart
 - 9 Volt
 - Bloody Lust (WIP)
 - Bloody Gust (WIP)
 - Lusty Blood (WIP)
 - The Stairway (does not stack infinitely)
-- Scapular (WIP)
-- Gnawed Leaf (WIP)
+- Scapular
+- Gnawed Leaf
 - Linger Bean
 - Godhead
 - No. 2 (WIP)
 - Tiny Planet
-- Mom's Key (WIP)
 - Serpent's Kiss
 
 [h1]New Items(Mod v2)[/h1]
@@ -66,7 +65,7 @@ https://youtu.be/CShMxC-pfMA?si=-DBtW0t3D2tMEWcz
 - Hutts - Original Mod Idea
 - TheTurtleMelon - Ideas &amp; Mod Thumbnail
 - PixelPlz - Boss rush and Hush door code for X-Ray vision</description>
-    <version>2.18</version>
+    <version>2.19</version>
     <visibility>Public</visibility>
     <tag id="Lua"/>
     <tag id="Items"/>

@@ -34,7 +34,6 @@ local settings = {
     godhead = true,
     number_two = true,
     tiny_planet = true,
-    moms_key = true,
     serpents_kiss = true,
     mysterious_liquid = true,
     hungry_soul = true,
@@ -61,24 +60,23 @@ local translation = {
     guppys_tail = "Guppys Tail",
     cracked_orb = "Cracked Orb",
     card_reading = "Card Reading",
-    infestation = "Infestation", -- 🚫
+    infestation = "Infestation",
     infestation_two = "Infestation Two",
     schoolbag = "Schoolbag", -- 🚫 Fix: Active item does not disappear when moving item to pocket slot
     stairway = "Stairway",
     eye_sores = "Eye Sores",
     jumper_cables = "Jumper Cables",
-    empty_heart = "Empty Heart", -- 🚫
+    empty_heart = "Empty Heart",
     nine_volt = "Nine Volt",
     lusty_blood = "Lusty Blood", -- 🚫
     bloody_lust = "Bloody Lust", -- 🚫
     bloody_gust = "Bloody Gust", -- 🚫
-    scapular = "Scapular", -- 🚫
-    gnawed_leaf = "Gnawed Leaf", -- 🚫
+    scapular = "Scapular",
+    gnawed_leaf = "Gnawed Leaf",
     linger_bean = "Linger Bean",
     godhead = "Godhead",
     number_two = "No. 2", -- 🚫
     tiny_planet = "Tiny Planet",
-    moms_key = "Mom's Key", -- 🚫
     serpents_kiss = "Serpent's Kiss",
     ----------
     mysterious_liquid = "Mysterious Liquid",
@@ -212,7 +210,7 @@ local itemsDescriptions = {
     ["lusty_blood"] = {LustyBloodItem, "{{ColorRainbow}}Damage bonus can be obtained 5 more times{{ColorRainbow}}"},
     ["bloody_lust"] = {BloodyLustItem, "{{ColorRainbow}}Damage bonus increased for each hit{{ColorRainbow}}"},
     ["bloody_gust"] = {BloodyGustItem, "{{ColorRainbow}}Tear bonus increased for each hit{{ColorRainbow}}"},
-    ["scapular"] = {ScapularItem, "{{ColorRainbow}}Gives an extra soul heart when triggered{{ColorRainbow}}"},
+    ["scapular"] = {ScapularItem, "{{ColorRainbow}}Also triggers with extra {{HalfHeart}} half a heart of health{{ColorRainbow}}"},
     ["gnawed_leaf"] = {GnawedLeafItem, "{{ColorRainbow}}Doubles player's contact damage whem triggered{{ColorRainbow}}"},
     ["linger_bean"] = {LingerBeanItem, "{{ColorRainbow}}Causes Isaac to fart randomly while shooting{{ColorRainbow}}"},
     ["godhead"] = {GodHeadItem, "{{ColorRainbow}}Increases aure size{{ColorRainbow}}"},
@@ -256,8 +254,8 @@ local chests = {PickupVariant.PICKUP_CHEST, PickupVariant.PICKUP_LOCKEDCHEST, Pi
 local spawning_tear = false
 local spawning_laser = false
 local using_item = false
-local current_scapular_charge = 0
-local scapular_activate = false
+local current_scapular_charge = {0, 0, 0, 0, 0, 0, 0, 0}
+local scapular_activate = {false, false, false, false, false, false, false, false}
 local jumper_cables_kills = 0
 local current_room_kills = 0
 local lusty_blood_extra_damage = 0
@@ -291,14 +289,17 @@ function mod:onNewRoom()
     if player:HasCollectible(LustyBloodItem) then
         lusty_blood_extra_damage = 0
     end
-    if player:HasCollectible(ScapularItem) then
-        current_scapular_charge = player:GetCollectibleNum(ScapularItem) - 1
+    for i = 0, Game():GetNumPlayers() - 1 do
+        local player = Isaac.GetPlayer(i)
+        if player:HasCollectible(ScapularItem) then
+            current_scapular_charge[i] = math.min(player:GetCollectibleNum(ScapularItem) - 1, 1)
+        end
     end
 end
 
 -- Checks how much health the player has excluding bone hearts for use with Scapular
-function mod:getPlayerTotalHealth()
-    local player = Isaac.GetPlayer(0)
+function mod:getPlayerTotalHealth(i)
+    local player = Isaac.GetPlayer(i)
     return player:GetHearts() + player:GetSoulHearts() + player:GetEternalHearts() + player:GetRottenHearts()
 end
 
@@ -600,17 +601,19 @@ end
 
 -- Infestation 1 Stacking
 -- Spawns an additional 2-6 blue flies after taking damage
-function mod:onDamageInfestation()
+function mod:onDamageInfestation(entity)
     if not settings.infestation then
         return
     end
-    local player = Isaac.GetPlayer(0)
-    if player:HasCollectible(InfestationItem) then
-        local copyCount = player:GetCollectibleNum(InfestationItem) - 1
-        if copyCount > 0 then
-            for i=1, copyCount, 1 do
-                local flies = math.random(2, 6)
-                player:AddBlueFlies(flies, player.Position, player)
+    local player = entity:ToPlayer()
+    if player then
+        if player:HasCollectible(InfestationItem) then
+            local copyCount = player:GetCollectibleNum(InfestationItem) - 1
+            if copyCount > 0 then
+                for i=1, copyCount, 1 do
+                    local flies = math.random(2, 6)
+                    player:AddBlueFlies(flies, player.Position, player)
+                end
             end
         end
     end
@@ -640,7 +643,6 @@ function mod:onClearGT(rng, position)
         end
     end
     if copyCount > 0 then
-        Isaac.ConsoleOutput(tostring(copyCount))
         for i=1, copyCount, 1 do
             if (rng:RandomFloat() * maxLuck * 0.1) + rng:RandomFloat() > 0.66 then
                 local spawnpos = room:FindFreePickupSpawnPosition(position)
@@ -766,14 +768,16 @@ function mod:onNewFloorEmptyHeart()
     if not settings.empty_heart then
         return
     end
-    local player = Isaac.GetPlayer(0)
-    if player:HasCollectible(EmptyHeartItem) then
-        local copyCount = player:GetCollectibleNum(EmptyHeartItem) - 1
-        if copyCount > 0 then
-            -- If player has two hearts less than their max red hearts, then trigger effect
-            if player:GetHearts() <= 2 then
-                for i=1, copyCount, 1 do
-                    player:AddMaxHearts(2, true)
+    for i = 0, Game():GetNumPlayers() - 1 do
+        local player = Isaac.GetPlayer(i)
+        if player:HasCollectible(EmptyHeartItem) then
+            local copyCount = player:GetCollectibleNum(EmptyHeartItem) - 1
+            if copyCount > 0 then
+                -- If player has two hearts less than their max red hearts, then trigger effect
+                if player:GetHearts() <= 2 then
+                    for i=1, copyCount, 1 do
+                        player:AddMaxHearts(2, true)
+                    end
                 end
             end
         end
@@ -879,7 +883,7 @@ function mod:onDamageBloodyGust()
 end
 
 -- Scapular Stacking
-function mod:onDamageScapular(entity, amount, flags, source, countdown_frames)
+function mod:onDamageScapular(_, amount)
     if not settings.scapular then
         return
     end
@@ -888,9 +892,9 @@ function mod:onDamageScapular(entity, amount, flags, source, countdown_frames)
         if player:HasCollectible(ScapularItem) then
             local copyCount = player:GetCollectibleNum(ScapularItem)
             if copyCount > 1 then
-                if current_scapular_charge > 0 and mod:getPlayerTotalHealth()-amount <= copyCount and mod:getPlayerTotalHealth()-amount > 0 then
-                    current_scapular_charge = current_scapular_charge - 1
-                    scapular_activate = true
+                if current_scapular_charge[i] > 0 and mod:getPlayerTotalHealth(i)-amount <= copyCount and mod:getPlayerTotalHealth(i)-amount > 0 then
+                    current_scapular_charge[i] = current_scapular_charge[i] - 1
+                    scapular_activate[i] = true
                 end
             end
         end
@@ -902,14 +906,14 @@ function mod:onUpdateScapular()
     if not settings.scapular then
         return
     end
-    if scapular_activate then
-        for i = 0, Game():GetNumPlayers() - 1 do
-            local player = Isaac.GetPlayer(i)
-            if player then
+    for i = 0, Game():GetNumPlayers() - 1 do
+        local player = Isaac.GetPlayer(i)
+        if player then
+            if scapular_activate[i] then
                 player:AddSoulHearts(2)
+                scapular_activate[i] = false
             end
         end
-        scapular_activate = false
     end
 end
 
@@ -918,16 +922,18 @@ function mod:postUpdateGnawedLeaf()
     if not settings.gnawed_leaf then
         return
     end
-    local player = Isaac.GetPlayer(0)
-    if player:HasCollectible(GnawedLeafItem) then
-        if player:GetMovementVector().X == 0 and player:GetMovementVector().Y == 0 and player:GetShootingInput().X == 0 and player:GetShootingInput().Y == 0 then
-            gnawed_leaf_ticks = gnawed_leaf_ticks + 1
-            if gnawed_leaf_ticks >= 30 then
-                gnawed_leaf_active = true
+    for i = 0, Game():GetNumPlayers() - 1 do
+        local player = Isaac.GetPlayer(i)
+        if player:HasCollectible(GnawedLeafItem) then
+            if player:GetMovementVector().X == 0 and player:GetMovementVector().Y == 0 and player:GetShootingInput().X == 0 and player:GetShootingInput().Y == 0 then
+                gnawed_leaf_ticks = gnawed_leaf_ticks + 1
+                if gnawed_leaf_ticks >= 30 then
+                    gnawed_leaf_active = true
+                end
+            else
+                gnawed_leaf_ticks = 0
+                gnawed_leaf_active = false
             end
-        else
-            gnawed_leaf_ticks = 0
-            gnawed_leaf_active = false
         end
     end
 end
