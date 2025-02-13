@@ -270,7 +270,9 @@ local gnawed_leaf_ticks = 0
 local gnawed_leaf_active = false
 local dropped_red_key = false
 
--- Checks if the player already has an active item in their pocket slot
+--- Checks if the player already has an active item in their pocket slot
+---@param player EntityPlayer
+---@return boolean
 function mod:canHoldPocketActive(player)
     if player:GetActiveItem(ActiveSlot.SLOT_POCKET) == 0 then
         return true
@@ -279,14 +281,15 @@ function mod:canHoldPocketActive(player)
     end
 end
 
--- Functions for counting enemies killed in the current room
+--- Functions for counting enemies killed in the current room
+---@param entity Entity
 function mod:onKillEnemy(entity)
     if entity:IsEnemy() then
         current_room_kills = current_room_kills + 1
     end
 end
 
--- Resets current room kills
+--- Resets current room kills
 function mod:onNewRoom()
     current_room_kills = 0
     local player = Isaac.GetPlayer(0)
@@ -302,13 +305,18 @@ function mod:onNewRoom()
 end
 
 -- Checks how much health the player has excluding bone hearts for use with Scapular
-function mod:getPlayerTotalHealth(i)
-    local player = Isaac.GetPlayer(i)
+---@param index integer
+---@return integer
+function mod:getPlayerTotalHealth(index)
+    local player = Isaac.GetPlayer(index)
     return player:GetHearts() + player:GetSoulHearts() + player:GetEternalHearts() + player:GetRottenHearts()
 end
 
--- Credit to PixelPlz for the code to open the Boss Rush & Hush rooms
--- Checks if room is Mom boss room or Mom's Heart boss room
+--- Credit to PixelPlz for the code to open the Boss Rush & Hush rooms
+--- Checks if room is Mom boss room or Mom's Heart boss room
+---@param type string
+---@param room Room
+---@return boolean
 function mod:IsMommyRoom(type, room)
 	if room:GetType() == RoomType.ROOM_BOSS and Game():GetLevel():GetAbsoluteStage() ~= LevelStage.STAGE7 then
 		local bossID = room:GetBossID()
@@ -322,7 +330,7 @@ function mod:IsMommyRoom(type, room)
 	return false
 end
 
--- Tries to spawn Boss Rush or Hush door if in correct boss room
+--- Tries to spawn Boss Rush or Hush door if in correct boss room
 function mod:TrySpawnXRayVisionExits()
     local room = Game():GetRoom()
     -- Boss Rush door from Mom
@@ -336,8 +344,8 @@ function mod:TrySpawnXRayVisionExits()
     end
 end
 
--- X-Ray Vision stacking trying to spawn Hush/Boss Rush exits upon clearing a room
-function mod:onClearXRV(rng, position)
+--- X-Ray Vision stacking trying to spawn Hush/Boss Rush exits upon clearing a room
+function mod:onClearXRV()
     if not settings.xray_vision then
         return
     end
@@ -352,7 +360,7 @@ function mod:onClearXRV(rng, position)
     end
 end
 
--- X-Ray Vision stacking trying to spawn Hush/Boss Rush exits upon entering a cleared room
+--- X-Ray Vision stacking trying to spawn Hush/Boss Rush exits upon entering a cleared room
 function mod:onNewRoomXRV()
     if not settings.xray_vision then
         return
@@ -371,7 +379,9 @@ function mod:onNewRoomXRV()
     end
 end
 
--- Adjusts stats appropriately for items that change stats or tear effects
+--- Adjusts stats appropriately for items that change stats or tear effects
+---@param player EntityPlayer
+---@param cacheFlags CacheFlag
 function mod:evaluateCache(player, cacheFlags)
     if cacheFlags & CacheFlag.CACHE_DAMAGE == CacheFlag.CACHE_DAMAGE then
         if player:HasCollectible(HeartbreakItem) and settings.heartbreak then
@@ -412,7 +422,8 @@ function mod:evaluateCache(player, cacheFlags)
     end
 end
 
--- Cursed Eye Stacking with Tears fires extra tears
+--- Cursed Eye Stacking with Tears fires extra tears
+--- @param tear EntityTear
 function mod:onFireTearsCE(tear)
     if not settings.cursed_eye then
         return
@@ -435,7 +446,8 @@ function mod:onFireTearsCE(tear)
     end
 end
 
--- Cursed Eye Stacking with Tech Lasers fires extra lasers
+--- Cursed Eye Stacking with Tech Lasers fires extra lasers
+--- @param laser EntityLaser
 function mod:onFireLaserCE(laser)
     if not settings.cursed_eye then
         return
@@ -460,7 +472,8 @@ function mod:onFireLaserCE(laser)
     end
 end
 
--- Loki's Horns Stacking with Tears, firing 4 tears diagonally
+--- Loki's Horns Stacking with Tears, firing 4 tears diagonally
+--- @param tear EntityTear
 function mod:onFireTearsLH(tear)
     if not settings.loki_horns then
         return
@@ -487,8 +500,8 @@ function mod:onFireTearsLH(tear)
     end
 end
 
--- Isaac's Tomb Stacking
--- Spawns an additional Old Chest per stack of Isaac's Tomb at the start of each floor
+--- Isaac's Tomb Stacking
+--- Spawns an additional Old Chest per stack of Isaac's Tomb at the start of each floor
 function mod:onNewFloorIT()
     if not settings.isaacs_tomb then
         return
@@ -506,7 +519,7 @@ function mod:onNewFloorIT()
     end
 end
 
--- Card Reading Stacking adds the third portal type when entering a floor
+--- Card Reading Stacking adds the third portal type when entering a floor
 function mod:onNewFloorCR()
     if not settings.card_reading then
         return
@@ -546,9 +559,11 @@ function mod:onNewFloorCR()
         end
 end
 
--- Car Battery Stacking
--- Uses the active item one additional time per stack of car battery
-function mod:onUseItemCB(item, rng, player_entity, flags, active_slot)
+--- Car Battery Stacking
+--- Uses the active item one additional time per stack of car battery
+--- @param item CollectibleType
+--- @param player_entity EntityPlayer
+function mod:onUseItemCB(item, _, player_entity)
     if not settings.car_battery then
         return
     end
@@ -573,7 +588,7 @@ function mod:onUseItemCB(item, rng, player_entity, flags, active_slot)
     end
 end
 
--- Adds an additional Minisaac when damaged per stack of Giant Cell
+--- Adds an additional Minisaac when damaged per stack of Giant Cell
 function mod:onDamageGC()
     if not settings.giant_cell then
         return
@@ -589,7 +604,7 @@ function mod:onDamageGC()
     end
 end
 
--- Uses Soul of Cain effect on taking damage if player has more than one Cracked Orb
+--- Uses Soul of Cain effect on taking damage if player has more than one Cracked Orb
 function mod:onDamageCO()
     if not settings.cracked_orb then
         return
@@ -598,13 +613,14 @@ function mod:onDamageCO()
         local player = Isaac.GetPlayer(i)
         local copyCount = player:GetCollectibleNum(CrackedOrbItem) - 1
         if copyCount > 0 then
-            player:UseCard(Card.CARD_SOUL_CAIN, UseFlag.USE_NOANNOUNCER)
+            player:UseCard(Card.CARD_SOUL_CAIN, UseFlag.USE_NOANIM)
         end
     end
 end
 
--- Infestation 1 Stacking
--- Spawns an additional 2-6 blue flies after taking damage
+--- Infestation 1 Stacking
+--- Spawns an additional 2-6 blue flies after taking damage
+--- @param entity Entity
 function mod:onDamageInfestation(entity)
     if not settings.infestation then
         return
@@ -623,7 +639,9 @@ function mod:onDamageInfestation(entity)
     end
 end
 
--- Adds an additional 33% (increased with luck) on room clear to spawn a chest of ANY random type
+--- Adds an additional 33% (increased with luck) on room clear to spawn a chest of ANY random type
+--- @param rng RNG
+--- @param position Vector
 function mod:onClearGT(rng, position)
     if not settings.guppys_tail then
         return
@@ -663,7 +681,8 @@ function mod:onClearGT(rng, position)
     end
 end
 
--- Spawn an additional blue spider per stack of Infestation 2 upon killing an enemy
+--- Spawn an additional blue spider per stack of Infestation 2 upon killing an enemy
+--- @param entity Entity
 function mod:onKillInfestationTwo(entity)
     if not settings.infestation_two then
         return
@@ -684,8 +703,12 @@ function mod:onKillInfestationTwo(entity)
     end
 end
 
--- If the player does not already have a pocket active item, the player's current active item will be moved to the pocket active slot
-function mod:onUseItemSchoolbag(item, rng, player_entity, flags, active_slot)
+--- If the player does not already have a pocket active item, the player's current active item will be moved to the pocket active slot
+--- @param item CollectibleType
+--- @param player_entity EntityPlayer
+--- @param flags any
+--- @param active_slot integer
+function mod:onUseItemSchoolbag(item, _, player_entity, flags, active_slot)
     if not settings.schoolbag then
         return
     end
@@ -703,7 +726,7 @@ function mod:onUseItemSchoolbag(item, rng, player_entity, flags, active_slot)
     end
 end
 
--- Stairway ladder will now persist after leaving the initial room
+--- Stairway ladder will now persist after leaving the initial room
 function mod:onNewRoomStairway()
     if not settings.stairway then
         return
@@ -722,7 +745,8 @@ function mod:onNewRoomStairway()
     end
 end
 
--- For every tear fired while stacking Eye Sore, an additional random tear will be fired in a random direction
+--- For every tear fired while stacking Eye Sore, an additional random tear will be fired in a random direction
+--- @param tear EntityTear
 function mod:onFireTearsEyeSores(tear)
     if not settings.eye_sores then
         return
@@ -745,7 +769,8 @@ function mod:onFireTearsEyeSores(tear)
     end
 end
 
--- Stacking Jumper Cables adds an additional charge to the primary active item and pocket active every 7 kills
+--- Stacking Jumper Cables adds an additional charge to the primary active item and pocket active every 7 kills
+--- @param entity Entity
 function mod:onKillJumperCables(entity)
     if not settings.jumper_cables then
         return
@@ -767,7 +792,7 @@ function mod:onKillJumperCables(entity)
     end
 end
 
--- Stacking Empty Heart adds an additional empty heart container per stack when effect is triggered
+--- Stacking Empty Heart adds an additional empty heart container per stack when effect is triggered
 function mod:onNewFloorEmptyHeart()
     if not settings.empty_heart then
         return
@@ -788,8 +813,10 @@ function mod:onNewFloorEmptyHeart()
     end
 end
 
--- 9 Volt Stacking adds additional charges back to the item upon use
-function mod:onUseItemNineVolt(item, rng, player_entity, flags, active_slot)
+--- 9 Volt Stacking adds additional charges back to the item upon use
+--- @param player_entity EntityPlayer
+--- @param flags any
+function mod:onUseItemNineVolt(_, _, player_entity, flags)
     if not settings.nine_volt then
         return
     end
@@ -804,7 +831,8 @@ function mod:onUseItemNineVolt(item, rng, player_entity, flags, active_slot)
     end
 end
 
--- Lusty Blood Stacking adds additional damage upon killing the appropriate number of enemies
+--- Lusty Blood Stacking adds additional damage upon killing the appropriate number of enemies
+--- @param entity Entity
 function mod:onKillEnemyLustyBlood(entity)
     if not settings.lusty_blood then
         return
@@ -825,12 +853,12 @@ function mod:onKillEnemyLustyBlood(entity)
     end
 end
 
--- Increments the number of hits taken on the current floor by 1 when hit
+--- Increments the number of hits taken on the current floor by 1 when hit
 function mod:onDamage()
     current_floor_hits_taken = current_floor_hits_taken + 1
 end
 
--- Resets value of hits taken on current floor, extra damage from bloody lust, and extra tears from bloody gust
+--- Resets value of hits taken on current floor, extra damage from bloody lust, and extra tears from bloody gust
 function mod:onNewFloor()
     dropped_red_key = false
     local player = Isaac.GetPlayer(0)
@@ -844,7 +872,7 @@ function mod:onNewFloor()
 
 end
 
--- Bloody Lust Stacking adds appropriate amount of damage when taking hits
+--- Bloody Lust Stacking adds appropriate amount of damage when taking hits
 function mod:onDamageBloodyLust()
     if not settings.bloody_lust then
         return
@@ -863,7 +891,7 @@ function mod:onDamageBloodyLust()
     end
 end
 
--- Bloody Gust Stacking adds appropriate amount of tears when taking hits
+--- Bloody Gust Stacking adds appropriate amount of tears when taking hits
 function mod:onDamageBloodyGust()
     if not settings.bloody_gust then
         return
@@ -886,7 +914,8 @@ function mod:onDamageBloodyGust()
     end
 end
 
--- Scapular Stacking
+--- Scapular Stacking
+--- @param amount integer
 function mod:onDamageScapular(_, amount)
     if not settings.scapular then
         return
@@ -905,7 +934,7 @@ function mod:onDamageScapular(_, amount)
     end
 end
 
--- Adds soul hearts to the player after taking damage. This is necessary as the MC_ENTITY_TAKE_DMG callback occurs before the actual damage is taken.
+--- Adds soul hearts to the player after taking damage. This is necessary as the MC_ENTITY_TAKE_DMG callback occurs before the actual damage is taken.
 function mod:onUpdateScapular()
     if not settings.scapular then
         return
@@ -921,7 +950,7 @@ function mod:onUpdateScapular()
     end
 end
 
--- Checks if the player has been standing still without shooting for 1 second before activating the gnawed leaf effect
+--- Checks if the player has been standing still without shooting for 1 second before activating the gnawed leaf effect
 function mod:postUpdateGnawedLeaf()
     if not settings.gnawed_leaf then
         return
@@ -942,8 +971,10 @@ function mod:postUpdateGnawedLeaf()
     end
 end
 
--- Gnawed Leaf Stacking. Deals double the player's current damage multiplied by number of stacks after the first whenever an enemy collides with the player
-function mod:onPlayerCollisionGnawedLeaf(player_entity, collider_entity, low)
+--- Gnawed Leaf Stacking. Deals double the player's current damage multiplied by number of stacks after the first whenever an enemy collides with the player
+--- @param player_entity EntityPlayer
+--- @param collider_entity Entity
+function mod:onPlayerCollisionGnawedLeaf(player_entity, collider_entity)
     if not settings.gnawed_leaf then
         return
     end
@@ -961,7 +992,8 @@ function mod:onPlayerCollisionGnawedLeaf(player_entity, collider_entity, low)
     end
 end
 
--- Linger bean stacking
+--- Linger bean stacking
+--- @param tear EntityTear
 function mod:onFireTearsLingerBean(tear)
     if not settings.linger_bean then
         return
@@ -987,11 +1019,15 @@ function mod:onFireTearsLingerBean(tear)
     end
 end
 
--- Stole this code from Fiend Folio which stole the code from Retribution. Get fricked.
+--- Stole this code from Fiend Folio which stole the code from Retribution. Get fricked.
+--- @param tear any
+--- @param multiplier number
 local function increaseTearScale(tear, multiplier)
     tear.Scale = tear.Scale * multiplier
 end
 
+--- Generate a bigger aura when stacking GodHeadItem
+--- @param tear EntityTear
 function mod:onTearUpdateGodHead(tear)
     if not settings.godhead then
         return
@@ -1015,7 +1051,8 @@ function mod:onTearUpdateGodHead(tear)
     end
 end
 
--- Number Two Stacking - If you know how to fix the visual issues, please leave a comment on the mod page or message me on twitter
+--- Number Two Stacking - If you know how to fix the visual issues, please leave a comment on the mod page or message me on twitter
+--- @param bomb EntityBomb
 function mod:onBombNumber2(bomb)
     if not settings.number_two then
         return
@@ -1040,47 +1077,56 @@ function mod:onBombNumber2(bomb)
     end
 end
 
+--- Sapwns additional tear when stacking Tiny Planet
+--- @param tear EntityTear
 function mod:onFireTearsTinyPlanet(tear)
     if not settings.tiny_planet then
         return
     end
     local player = tear.SpawnerEntity:ToPlayer()
-    if player:HasCollectible(TinyPlanetItem) then
-        local copyCount = player:GetCollectibleNum(TinyPlanetItem) - 1
-        if copyCount > 0 then
-            if spawning_tear then
-                return
-            end
-            for i=1, copyCount, 1 do
-                spawning_tear = true
-                local fired_tear = player:FireTear(tear.Position, tear.Velocity, false, true, false, player, 0.5)
-                spawning_tear = false
+    if player then
+        if player:HasCollectible(TinyPlanetItem) then
+            local copyCount = player:GetCollectibleNum(TinyPlanetItem) - 1
+            if copyCount > 0 then
+                if spawning_tear then
+                    return
+                end
+                for i=1, copyCount, 1 do
+                    spawning_tear = true
+                    player:FireTear(tear.Position, tear.Velocity, false, true, false, player, 0.5)
+                    spawning_tear = false
+                end
             end
         end
     end
 end
 
+--- SerpentsKissItem stacking - Increases chance of poison tears and assures black heart drop on kill
+--- @param tear EntityTear
 function mod:onFireTearsSerpentsKiss(tear)
     if not settings.serpents_kiss then
         return
     end
     local player = tear.SpawnerEntity:ToPlayer()
-    if player:HasCollectible(SerpentsKissItem) then
-        local copyCount = player:GetCollectibleNum(SerpentsKissItem) - 1
-        if copyCount > 0 then
-            if not tear:HasTearFlags(TearFlags.TEAR_POISON) then
-                if math.random() < 0.15 * copyCount then
-                    tear:AddTearFlags(TearFlags.TEAR_POISON)
+    if player then
+        if player:HasCollectible(SerpentsKissItem) then
+            local copyCount = player:GetCollectibleNum(SerpentsKissItem) - 1
+            if copyCount > 0 then
+                if not tear:HasTearFlags(TearFlags.TEAR_POISON) then
+                    if math.random() < 0.15 * copyCount then
+                        tear:AddTearFlags(TearFlags.TEAR_POISON)
+                    end
                 end
-            end
-            if tear:HasTearFlags(TearFlags.TEAR_POISON) then
-                tear:AddTearFlags(TearFlags.TEAR_BLACK_HP_DROP)
+                if tear:HasTearFlags(TearFlags.TEAR_POISON) then
+                    tear:AddTearFlags(TearFlags.TEAR_BLACK_HP_DROP)
+                end
             end
         end
     end
 end
 
--- Stacking Mysterious Liquids by making the creep bigger and lasting longer
+--- Stacking Mysterious Liquids by making the creep bigger and lasting longer
+--- @param entity Entity
 function mod:onDamageDealtMysteriousLiquid(entity)
     if not settings.mysterious_liquid then
         return
@@ -1099,7 +1145,8 @@ function mod:onDamageDealtMysteriousLiquid(entity)
     end
 end
 
--- Stacking Hungry Soul by increasing the probability of ghosts spawning: +5% for each extra copy starting at 35% with one extra copy
+--- Stacking Hungry Soul by increasing the probability of ghosts spawning: +5% for each extra copy starting at 35% with one extra copy
+--- @param entity Entity
 function mod:onKillEnemyHungrySoul(entity)
     if not settings.hungry_soul then
         return
@@ -1117,7 +1164,8 @@ function mod:onKillEnemyHungrySoul(entity)
     end
 end
 
--- Also updating Hungry souls so that a boss has a very low chance of spawning a ghost: 1.5% for each extra copy starting at base 1.5%
+--- Also updating Hungry souls so that a boss has a very low chance of spawning a ghost: 1.5% for each extra copy starting at base 1.5%
+--- @param entity Entity
 function mod:onDamageBossHungrySoul(entity)
     if not settings.hungry_soul then
         return
@@ -1138,7 +1186,7 @@ function mod:onDamageBossHungrySoul(entity)
     end
 end
 
--- Stacking anemic will now create a creep which increases in size and damage for each extra copy
+--- Stacking anemic will now create a creep which increases in size and damage for each extra copy
 function mod:onUpdateAnemic()
     if not settings.anemic then
         return
@@ -1157,22 +1205,25 @@ function mod:onUpdateAnemic()
     end
 end
 
--- Stacking Pupula Duplex will now increase the size of the tear by 25% for each extra copy
+--- Stacking Pupula Duplex will now increase the size of the tear by 25% for each extra copy
+--- @param tear EntityTear
 function mod:onFireTearsPupulaDuplex(tear)
     if not settings.pupula_duplex then
         return
     end
     local player = tear.SpawnerEntity:ToPlayer()
-    if player:HasCollectible(PupulaDuplexItem) then
-        local copyCount = player:GetCollectibleNum(PupulaDuplexItem) - 1
-        if copyCount > 0 then
-            local scaleFactor = copyCount*0.25 + 1
-            tear.Scale = tear.Scale * scaleFactor
+    if player then
+        if player:HasCollectible(PupulaDuplexItem) then
+            local copyCount = player:GetCollectibleNum(PupulaDuplexItem) - 1
+            if copyCount > 0 then
+                local scaleFactor = copyCount*0.25 + 1
+                tear.Scale = tear.Scale * scaleFactor
+            end
         end
     end
 end
 
--- Stacking Toxic Shock will now posion the enemies for a longer duration and with a bigger damage output
+--- Stacking Toxic Shock will now posion the enemies for a longer duration and with a bigger damage output
 function mod:onNewRoomToxicShock()
     if not settings.toxic_shock then
         return
@@ -1192,7 +1243,7 @@ function mod:onNewRoomToxicShock()
     end
 end
 
--- Stacking Toxic Shock will now posion the bosses overtime (when the cd for boss status expires, roughly every 5 seconds)
+--- Stacking Toxic Shock will now posion the bosses overtime (when the cd for boss status expires, roughly every 5 seconds)
 function mod:onUpdateToxicShockBoss()
     if not settings.toxic_shock then
         return
@@ -1215,7 +1266,7 @@ function mod:onUpdateToxicShockBoss()
     end
 end
 
--- Stacking Spelunker Hat will now give the same effect as having The Mind item + showing also the ultra secret room
+--- Stacking Spelunker Hat will now give the same effect as having The Mind item + showing also the ultra secret room
 function mod:onUpdateSpelunkerHat()
     if not settings.spelunker_hat then
         return
@@ -1249,7 +1300,7 @@ function mod:onUpdateSpelunkerHat()
     end
 end
 
--- Stacking Spelunker Hat will also give a cracked key each floor and on pickup
+--- Stacking Spelunker Hat will also give a cracked key each floor and on pickup
 function mod:onNewFloorSpelunkerHat()
     if not settings.spelunker_hat then
         return
@@ -1267,7 +1318,7 @@ function mod:onNewFloorSpelunkerHat()
     end
 end
 
--- Stacking PHD, Virgo or Lucky Foot will convert all pills into its horse pill version (even those holded by the player)
+--- Stacking PHD, Virgo or Lucky Foot will convert all pills into its horse pill version (even those holded by the player)
 function mod:onUpdateHorsePills()
     if not settings.phd then
         return
@@ -1293,7 +1344,8 @@ function mod:onUpdateHorsePills()
     end
 end
 
--- Obtaining a pill via Mom's Bottle of pills will now play the horse pill animation
+--- Obtaining a pill via Mom's Bottle of pills will now play the horse pill animation
+--- @param player EntityPlayer
 function mod:OnPlayerGetsPill(_, _, player)
     if not settings.phd then
         return
@@ -1309,19 +1361,24 @@ function mod:OnPlayerGetsPill(_, _, player)
     end
 end
 
--- Stacking Chocolate Milk will give the player a 25% extra damage for each extra copy when firing a tear at all charge level
+--- Stacking Chocolate Milk will give the player a 25% extra damage for each extra copy when firing a tear at all charge level
+--- @param tear EntityTear
 function mod:onTearInitChocoMilk(tear)
     if not settings.chocolate_milk then
         return
     end
     local player = tear.SpawnerEntity:ToPlayer()
-    local copyCountChocolateMilk = player:GetCollectibleNum(ChocolateMilkItem) - 1
-    if copyCountChocolateMilk > 0 then
-        tear.CollisionDamage = tear.CollisionDamage * (1 + 0.25*copyCountChocolateMilk)
+    if player then
+        local copyCountChocolateMilk = player:GetCollectibleNum(ChocolateMilkItem) - 1
+        if copyCountChocolateMilk > 0 then
+            tear.CollisionDamage = tear.CollisionDamage * (1 + 0.25*copyCountChocolateMilk)
+        end
     end
 end
 
--- Stacking Chocolate Milk will give the player damage upgrade when combining multiple copies with Brimstone or Technology
+--- Stacking Chocolate Milk will give the player damage upgrade when combining multiple copies with Brimstone or Technology
+--- @param player EntityPlayer
+--- @param cacheFlag CacheFlag
 function mod:onEvaluateCacheChocoMilk(player, cacheFlag)
     if not settings.chocolate_milk then
         return
@@ -1338,8 +1395,9 @@ function mod:onEvaluateCacheChocoMilk(player, cacheFlag)
     end
 end
 
----@param tear EntityTear
-function mod:onTearCollideFlatStone(tear) -- add bigger creep puddle
+ -- Stacking Flat Stone now generates two extra small tears on bounce
+--- @param tear EntityTear
+function mod:onTearCollideFlatStone(tear)
     if not settings.flat_stone then
         return
     end
@@ -1390,6 +1448,7 @@ mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBloodyLust, EntityT
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBloodyGust, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageScapular, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBossHungrySoul)
+mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBirdCage, EntityType.ENTITY_PLAYER)
 
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, mod.onDamageDealtMysteriousLiquid)
 
