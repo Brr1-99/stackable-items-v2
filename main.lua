@@ -47,6 +47,7 @@ local settings = {
     lucky_foot = true,
     lump_of_coal = true,
     chocolate_milk = true,
+    flat_stone = true,
 }
 
 local translation = {
@@ -91,6 +92,7 @@ local translation = {
     lucky_foot = "Lucky Foot",
     lump_of_coal = "Lump of Coal",
     chocolate_milk = "Chocolate Milk",
+    flat_stone = "Flat Stone",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -183,6 +185,7 @@ local VirgoItem = CollectibleType.COLLECTIBLE_VIRGO
 local LuckyFootItem = CollectibleType.COLLECTIBLE_LUCKY_FOOT
 local LumpOfCoalItem = CollectibleType.COLLECTIBLE_LUMP_OF_COAL
 local ChocolateMilkItem = CollectibleType.COLLECTIBLE_CHOCOLATE_MILK
+local FlatStoneItem = CollectibleType.COLLECTIBLE_FLAT_STONE
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -229,12 +232,13 @@ local itemsDescriptions = {
     ["lucky_foot"] = {LuckyFootItem, "{{ColorRainbow}}Transforms all {{Pill}} pills into horse pills{{ColorRainbow}}"},
     ["lump_of_coal"] = {LumpOfCoalItem, "{{ColorRainbow}}{{ArrowUp}} +1 Tear range{{ColorRainbow}}"},
     ["chocolate_milk"] = {ChocolateMilkItem, "{{ColorRainbow}}{{ArrowUp}} +25% Tear damage{{ColorRainbow}}"},
+    ["flat_stone"] = {FlatStoneItem, "{{ColorRainbow}}Spawns two tears on bounce that deal 40% of base damage{{ColorRainbow}}"},
 }
 
 
 local languageCode = "en_us"
 
-if EID then
+if EID and REPENTOGON then
     for itemSetting, description in pairs(itemsDescriptions) do
         if settings[itemSetting] then
             for i, condition in pairs(EID.DescriptionConditions["5.100." .. tostring(description[1])] or {}) do
@@ -988,27 +992,28 @@ local function increaseTearScale(tear, multiplier)
     tear.Scale = tear.Scale * multiplier
 end
 
--- Godhead Stacking
-mod:AddCallback(ModCallbacks.MC_POST_TEAR_UPDATE, function(_, tear)
+function mod:onTearUpdateGodHead(tear)
     if not settings.godhead then
         return
     end
     local player = tear.SpawnerEntity:ToPlayer()
-    if player:HasCollectible(GodHeadItem) then
-        local copyCount = player:GetCollectibleNum(GodHeadItem) - 1
-        if copyCount > 0 then
-            if tear.FrameCount < 1 then
-                if tear.Parent.Type == 1 or (tear.Parent.Type == 3 and (tear.Parent.Variant == 80 or tear.Parent.Variant == 235 or tear.Parent.Variant == 240)) then
-                    increaseTearScale(tear, 1 + (copyCount * 0.25))
-                end
-            elseif tear.FrameCount == 1 and tear.Parent then
-                if tear.Parent.Type == 3 and tear.Parent.Variant == 81 then
-                    increaseTearScale(tear, 1 + (copyCount * 0.25))
+    if player then
+        if player:HasCollectible(GodHeadItem) then
+            local copyCount = player:GetCollectibleNum(GodHeadItem) - 1
+            if copyCount > 0 then
+                if tear.FrameCount < 1 then
+                    if tear.Parent.Type == 1 or (tear.Parent.Type == 3 and (tear.Parent.Variant == 80 or tear.Parent.Variant == 235 or tear.Parent.Variant == 240)) then
+                        increaseTearScale(tear, 1 + (copyCount * 0.25))
+                    end
+                elseif tear.FrameCount == 1 and tear.Parent then
+                    if tear.Parent.Type == 3 and tear.Parent.Variant == 81 then
+                        increaseTearScale(tear, 1 + (copyCount * 0.25))
+                    end
                 end
             end
         end
     end
-end)
+end
 
 -- Number Two Stacking - If you know how to fix the visual issues, please leave a comment on the mod page or message me on twitter
 function mod:onBombNumber2(bomb)
@@ -1333,6 +1338,32 @@ function mod:onEvaluateCacheChocoMilk(player, cacheFlag)
     end
 end
 
+---@param tear EntityTear
+function mod:onTearCollideFlatStone(tear) -- add bigger creep puddle
+    if not settings.flat_stone then
+        return
+    end
+    local player = tear.SpawnerEntity:ToPlayer()
+    if player then
+        local copyCountFlatStone = player:GetCollectibleNum(FlatStoneItem) - 1
+        if copyCountFlatStone > 0 then
+            if tear.Height == -5 then
+                if tear.HasTearFlags(tear, TearFlags.TEAR_EFFECT_COUNT) == false then
+                   tear:Remove()
+                   local leftTear = player:FireTear(tear.Position, tear.Velocity:Rotated(5), false, true, false, nil, 0.4)
+                   leftTear:AddTearFlags(TearFlags.TEAR_EFFECT_COUNT)
+                   leftTear.SpriteScale = Vector(0.75, 0.75)
+                   local midTear = player:FireTear(tear.Position, tear.Velocity:Rotated(0), false, true, false, nil, 1)
+                   midTear:AddTearFlags(TearFlags.TEAR_EFFECT_COUNT)
+                   local rightTear = player:FireTear(tear.Position, tear.Velocity:Rotated(-5), true, false, true, nil, 0.4)
+                   rightTear:AddTearFlags(TearFlags.TEAR_EFFECT_COUNT)
+                   rightTear.SpriteScale = Vector(0.75, 0.75)
+               end
+            end
+        end
+    end
+end
+
 mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, mod.onEvaluateCacheChocoMilk)
 
 mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, mod.OnPlayerGetsPill, MomsBottleOfPillsItem)
@@ -1376,6 +1407,10 @@ mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onFireTearsLingerBean)
 mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onFireTearsTinyPlanet)
 mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onFireTearsSerpentsKiss)
 mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onFireTearsPupulaDuplex)
+
+mod:AddCallback(ModCallbacks.MC_PRE_TEAR_UPDATE, mod.onTearCollideFlatStone)
+
+mod:AddCallback(ModCallbacks.MC_POST_TEAR_UPDATE, mod.onTearUpdateGodHead)
 
 mod:AddCallback(ModCallbacks.MC_USE_ITEM, mod.onUseItemCB)
 mod:AddCallback(ModCallbacks.MC_USE_ITEM, mod.onUseItemNineVolt)
