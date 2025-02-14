@@ -48,6 +48,7 @@ local settings = {
     lump_of_coal = true,
     chocolate_milk = true,
     flat_stone = true,
+    moms_purse = true,
 }
 
 local translation = {
@@ -93,6 +94,7 @@ local translation = {
     lump_of_coal = "Lump of Coal",
     chocolate_milk = "Chocolate Milk",
     flat_stone = "Flat Stone",
+    moms_purse = "Mom's Purse"
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -186,6 +188,7 @@ local LuckyFootItem = CollectibleType.COLLECTIBLE_LUCKY_FOOT
 local LumpOfCoalItem = CollectibleType.COLLECTIBLE_LUMP_OF_COAL
 local ChocolateMilkItem = CollectibleType.COLLECTIBLE_CHOCOLATE_MILK
 local FlatStoneItem = CollectibleType.COLLECTIBLE_FLAT_STONE
+local MomsPurseItem = CollectibleType.COLLECTIBLE_MOMS_PURSE
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -232,7 +235,8 @@ local itemsDescriptions = {
     ["lucky_foot"] = {LuckyFootItem, "{{ColorRainbow}}Transforms all {{Pill}} pills into horse pills{{ColorRainbow}}"},
     ["lump_of_coal"] = {LumpOfCoalItem, "{{ColorRainbow}}{{ArrowUp}} +1 Tear range{{ColorRainbow}}"},
     ["chocolate_milk"] = {ChocolateMilkItem, "{{ColorRainbow}}{{ArrowUp}} +25% Tear damage{{ColorRainbow}}"},
-    ["flat_stone"] = {FlatStoneItem, "{{ColorRainbow}}Spawns two tears on bounce that deal 40% of base damage{{ColorRainbow}}"},
+    ["flat_stone"] = {FlatStoneItem, "{{ColorRainbow}}Spawns 2 tears on bounce that deal 40% of base damage{{ColorRainbow}}"},
+    ["moms_purse"] = {MomsPurseItem, "{{ColorRainbow}}Gulps trinkets and spawns +1 random trinket {{ColorRainbow}}"},
 }
 
 
@@ -1422,7 +1426,25 @@ function mod:onTearCollideFlatStone(tear)
     end
 end
 
-mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, mod.onEvaluateCacheChocoMilk)
+--- Stacking MomsPurseItem will gulp current trinkets and spawn one more on pickup
+--- @param type CollectibleType
+function mod:onMomsPursePickup(type)
+    if not settings.moms_purse then
+        return
+    end
+    for i = 0, Game():GetNumPlayers() - 1 do
+        local player = Isaac.GetPlayer(i)
+        local copyCountMomsPurse = player:GetCollectibleNum(MomsPurseItem)
+        if copyCountMomsPurse > 0 and type == CollectibleType.COLLECTIBLE_MOMS_PURSE then
+            player:UseActiveItem(CollectibleType.COLLECTIBLE_SMELTER, UseFlag.USE_NOANIM)
+            player:PlayDelayedSFX(SoundEffect.SOUND_VAMP_GULP, 2, 2, 2)
+            Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, 0, player.Position, Vector.Zero, nil)
+        end
+    end
+end
+
+
+mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onMomsPursePickup)
 
 mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, mod.OnPlayerGetsPill, MomsBottleOfPillsItem)
 
@@ -1432,12 +1454,9 @@ mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateScapular)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateAnemic)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateToxicShockBoss)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateSpelunkerHat)
-mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.onNewRoom)
-mod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, mod.onKillEnemy)
-mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamage, EntityType.ENTITY_PLAYER)
-mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, mod.onNewFloor)
-
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.postUpdateGnawedLeaf)
+
+mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamage, EntityType.ENTITY_PLAYER)
 
 mod:AddCallback(ModCallbacks.MC_PRE_PLAYER_COLLISION, mod.onPlayerCollisionGnawedLeaf)
 
@@ -1448,10 +1467,9 @@ mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBloodyLust, EntityT
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBloodyGust, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageScapular, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBossHungrySoul)
-mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBirdCage, EntityType.ENTITY_PLAYER)
 
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, mod.onDamageDealtMysteriousLiquid)
-
+mod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, mod.onKillEnemy)
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, mod.onKillInfestationTwo)
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, mod.onKillJumperCables)
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, mod.onKillEnemyLustyBlood)
@@ -1479,9 +1497,12 @@ mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, mod.onNewFloorIT)
 mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, mod.onNewFloorCR)
 mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, mod.onNewFloorEmptyHeart)
 mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, mod.onNewFloorSpelunkerHat)
+mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, mod.onNewFloor)
 
 mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, mod.evaluateCache)
+mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, mod.onEvaluateCacheChocoMilk)
 
+mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.onNewRoom)
 mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.onNewRoomXRV)
 mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.onNewRoomStairway)
 mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.onNewRoomToxicShock)
