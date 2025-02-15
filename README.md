@@ -58,6 +58,10 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - Lucky Foot
 - Lump of Coal
 - Chocolate Milk
+- Flat Stone (does not stack infinitely)
+- Mom's Purse (does not stack infinitely)
+- Ball of Tar
+- Aquarius
 
 - **More items coming soon!**
 
@@ -70,6 +74,6 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - **TheTurtleMelon** – Ideas & Mod Thumbnail
 - **PixelPlz** – Boss rush & Hush door code for X-Ray Vision
 
-### Version: 2.17
+### Version: 2.24
 ### Tags: Lua, Items, Tweaks, Update
 

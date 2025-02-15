@@ -443,6 +443,9 @@ function mod:onFireTearsCE(tear)
     if spawning_tear then
         return
     end
+    if not tear.SpawnerEntity then
+        return
+    end
     local player = tear.SpawnerEntity:ToPlayer()
     if player then
         if player:HasCollectible(CursedEyeItem) then
@@ -491,6 +494,9 @@ function mod:onFireTearsLH(tear)
         return
     end
     if spawning_tear then
+        return
+    end
+    if not tear.SpawnerEntity then
         return
     end
     local player = tear.SpawnerEntity:ToPlayer()
@@ -766,6 +772,9 @@ function mod:onFireTearsEyeSores(tear)
     if spawning_tear then
         return
     end
+    if not tear.SpawnerEntity then
+        return
+    end
     local player = tear.SpawnerEntity:ToPlayer()
     if player then
         if player:HasCollectible(EyeSoresItem) then
@@ -1010,6 +1019,9 @@ function mod:onFireTearsLingerBean(tear)
     if not settings.linger_bean then
         return
     end
+    if not tear.SpawnerEntity then
+        return
+    end
     local player = tear.SpawnerEntity:ToPlayer()
     if player then
         if player:HasCollectible(LingerBeanItem) then
@@ -1042,6 +1054,9 @@ end
 --- @param tear EntityTear
 function mod:onTearUpdateGodHead(tear)
     if not settings.godhead then
+        return
+    end
+    if not tear.SpawnerEntity then
         return
     end
     local player = tear.SpawnerEntity:ToPlayer()
@@ -1095,6 +1110,9 @@ function mod:onFireTearsTinyPlanet(tear)
     if not settings.tiny_planet then
         return
     end
+    if not tear.SpawnerEntity then
+        return
+    end
     local player = tear.SpawnerEntity:ToPlayer()
     if player then
         if player:HasCollectible(TinyPlanetItem) then
@@ -1117,6 +1135,9 @@ end
 --- @param tear EntityTear
 function mod:onFireTearsSerpentsKiss(tear)
     if not settings.serpents_kiss then
+        return
+    end
+    if not tear.SpawnerEntity then
         return
     end
     local player = tear.SpawnerEntity:ToPlayer()
@@ -1221,6 +1242,9 @@ end
 --- @param tear EntityTear
 function mod:onFireTearsPupulaDuplex(tear)
     if not settings.pupula_duplex then
+        return
+    end
+    if not tear.SpawnerEntity then
         return
     end
     local player = tear.SpawnerEntity:ToPlayer()
@@ -1379,6 +1403,9 @@ function mod:onTearInitChocoMilk(tear)
     if not settings.chocolate_milk then
         return
     end
+    if not tear.SpawnerEntity then
+        return
+    end
     local player = tear.SpawnerEntity:ToPlayer()
     if player then
         local copyCountChocolateMilk = player:GetCollectibleNum(ChocolateMilkItem) - 1
@@ -1411,6 +1438,9 @@ end
 --- @param tear EntityTear
 function mod:onTearCollideFlatStone(tear)
     if not settings.flat_stone then
+        return
+    end
+    if not tear.SpawnerEntity then
         return
     end
     local player = tear.SpawnerEntity:ToPlayer()
@@ -1473,6 +1503,9 @@ end
 --- @param tear EntityTear
 function mod:onFireTearsBallOfTar(tear)
     if not settings.ball_of_tar then
+        return
+    end
+    if not tear.SpawnerEntity then
         return
     end
     local player = tear.SpawnerEntity:ToPlayer()
