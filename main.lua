@@ -49,6 +49,8 @@ local settings = {
     chocolate_milk = true,
     flat_stone = true,
     moms_purse = true,
+    ball_of_tar = true,
+    aquarius = true,
 }
 
 local translation = {
@@ -94,7 +96,9 @@ local translation = {
     lump_of_coal = "Lump of Coal",
     chocolate_milk = "Chocolate Milk",
     flat_stone = "Flat Stone",
-    moms_purse = "Mom's Purse"
+    moms_purse = "Mom's Purse",
+    ball_of_tar = "Ball of Tar",
+    aquarius = "Aquarius",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -189,6 +193,8 @@ local LumpOfCoalItem = CollectibleType.COLLECTIBLE_LUMP_OF_COAL
 local ChocolateMilkItem = CollectibleType.COLLECTIBLE_CHOCOLATE_MILK
 local FlatStoneItem = CollectibleType.COLLECTIBLE_FLAT_STONE
 local MomsPurseItem = CollectibleType.COLLECTIBLE_MOMS_PURSE
+local BallOfTarItem = CollectibleType.COLLECTIBLE_BALL_OF_TAR
+local AquariusItem = CollectibleType.COLLECTIBLE_AQUARIUS
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -236,7 +242,9 @@ local itemsDescriptions = {
     ["lump_of_coal"] = {LumpOfCoalItem, "{{ColorRainbow}}{{ArrowUp}} +1 Tear range{{ColorRainbow}}"},
     ["chocolate_milk"] = {ChocolateMilkItem, "{{ColorRainbow}}{{ArrowUp}} +25% Tear damage{{ColorRainbow}}"},
     ["flat_stone"] = {FlatStoneItem, "{{ColorRainbow}}Spawns 2 tears on bounce that deal 40% of base damage{{ColorRainbow}}"},
-    ["moms_purse"] = {MomsPurseItem, "{{ColorRainbow}}Gulps trinkets and spawns +1 random trinket {{ColorRainbow}}"},
+    ["moms_purse"] = {MomsPurseItem, "{{ColorRainbow}}Gulps trinkets and spawns +1 random trinket{{ColorRainbow}}"},
+    ["ball_of_tar"] = {BallOfTarItem, "{{ColorRainbow}}Increases creep size, adds +15% chance of firing slow tears and gives +30% chance of firing freezing tears instead{{ColorRainbow}}"},
+    ["aquarius"] = {AquariusItem, "{{ColorRainbow}}Increases creep size and damage{{ColorRainbow}}"},
 }
 
 
@@ -1443,6 +1451,69 @@ function mod:onMomsPursePickup(type)
     end
 end
 
+--- Stacking BallOfTarItem will increase creep size
+function mod:onUpdateBallOfTar()
+    if not settings.ball_of_tar then
+        return
+    end
+    for i = 0, Game():GetNumPlayers() - 1 do
+        local player = Isaac.GetPlayer(i)
+        if player:HasCollectible(BallOfTarItem) then
+            local copyCount = player:GetCollectibleNum(BallOfTarItem) - 1
+            if copyCount > 0 then
+                for _, effect in pairs(Isaac.FindByType(EntityType.ENTITY_EFFECT, EffectVariant.PLAYER_CREEP_BLACK, -1, false, false)) do
+                    effect.SpriteScale = Vector(copyCount*0.33 + 1, copyCount*0.33 + 1)
+                end
+            end
+        end
+    end
+end
+
+--- BallOfTarItem stacking - Increases chance of slowing tears and to replace slow with freeze effect
+--- @param tear EntityTear
+function mod:onFireTearsBallOfTar(tear)
+    if not settings.ball_of_tar then
+        return
+    end
+    local player = tear.SpawnerEntity:ToPlayer()
+    if player then
+        if player:HasCollectible(BallOfTarItem) then
+            local copyCount = player:GetCollectibleNum(BallOfTarItem) - 1
+            if copyCount > 0 then
+                if not tear:HasTearFlags(TearFlags.TEAR_SLOW) then
+                    if math.random() < 0.15 * copyCount then
+                        tear:AddTearFlags(TearFlags.TEAR_SLOW)
+                    end
+                end
+                if tear:HasTearFlags(TearFlags.TEAR_SLOW) then
+                    if math.random() < 0.30 * copyCount then
+                        tear:AddTearFlags(TearFlags.TEAR_FREEZE)
+                        tear:ChangeVariant(TearVariant.ICE)
+                    end
+                end
+            end
+        end
+    end
+end
+
+--- Stacking AquariusItem will increase creep size
+function mod:onUpdateAquarius()
+    if not settings.aquarius then
+        return
+    end
+    for i = 0, Game():GetNumPlayers() - 1 do
+        local player = Isaac.GetPlayer(i)
+        if player:HasCollectible(AquariusItem) then
+            local copyCount = player:GetCollectibleNum(AquariusItem) - 1
+            if copyCount > 0 then
+                for _, effect in pairs(Isaac.FindByType(EntityType.ENTITY_EFFECT, EffectVariant.PLAYER_CREEP_HOLYWATER_TRAIL, -1, false, false)) do
+                    effect.SpriteScale = Vector(copyCount*0.33 + 1, copyCount*0.33 + 1)
+                    effect.CollisionDamage = 1 + copyCount*2
+                end
+            end
+        end
+    end
+end
 
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onMomsPursePickup)
 
@@ -1455,6 +1526,8 @@ mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateAnemic)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateToxicShockBoss)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateSpelunkerHat)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.postUpdateGnawedLeaf)
+mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateBallOfTar)
+mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateAquarius)
 
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamage, EntityType.ENTITY_PLAYER)
 
@@ -1484,6 +1557,7 @@ mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onFireTearsLingerBean)
 mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onFireTearsTinyPlanet)
 mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onFireTearsSerpentsKiss)
 mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onFireTearsPupulaDuplex)
+mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onFireTearsBallOfTar)
 
 mod:AddCallback(ModCallbacks.MC_PRE_TEAR_UPDATE, mod.onTearCollideFlatStone)
 
