@@ -51,6 +51,7 @@ local settings = {
     moms_purse = true,
     ball_of_tar = true,
     aquarius = true,
+    bobs_curse = true,
 }
 
 local translation = {
@@ -99,6 +100,7 @@ local translation = {
     moms_purse = "Mom's Purse",
     ball_of_tar = "Ball of Tar",
     aquarius = "Aquarius",
+    bobs_curse = "Bob's Curse",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -195,6 +197,7 @@ local FlatStoneItem = CollectibleType.COLLECTIBLE_FLAT_STONE
 local MomsPurseItem = CollectibleType.COLLECTIBLE_MOMS_PURSE
 local BallOfTarItem = CollectibleType.COLLECTIBLE_BALL_OF_TAR
 local AquariusItem = CollectibleType.COLLECTIBLE_AQUARIUS
+local BobsCurseItem = CollectibleType.COLLECTIBLE_BOBS_CURSE
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -245,6 +248,7 @@ local itemsDescriptions = {
     ["moms_purse"] = {MomsPurseItem, "{{ColorRainbow}}Gulps trinkets and spawns +1 random trinket{{ColorRainbow}}"},
     ["ball_of_tar"] = {BallOfTarItem, "{{ColorRainbow}}Increases creep size, adds +15% chance of firing slow tears and gives +30% chance of firing freezing tears instead{{ColorRainbow}}"},
     ["aquarius"] = {AquariusItem, "{{ColorRainbow}}Increases creep size and damage{{ColorRainbow}}"},
+    ["bobs_curse"] = {BobsCurseItem, "{{ColorRainbow}}{{ArrowUp}} +15% chance of firing poison tears{{ColorRainbow}}"},
 }
 
 
@@ -1548,6 +1552,32 @@ function mod:onUpdateAquarius()
     end
 end
 
+--- BobsCurseItem stacking - Increases chance of poison tears
+--- @param tear EntityTear
+function mod:onFireTearsBobsCurse(tear)
+    if not settings.bobs_curse then
+        return
+    end
+    if not tear.SpawnerEntity then
+        return
+    end
+    local player = tear.SpawnerEntity:ToPlayer()
+    if player then
+        if player:HasCollectible(BobsCurseItem) then
+            local copyCount = player:GetCollectibleNum(BobsCurseItem) - 1
+            if copyCount > 0 then
+                if not tear:HasTearFlags(TearFlags.TEAR_POISON) then
+                    if math.random() < 0.15 * copyCount then
+                        tear:AddTearFlags(TearFlags.TEAR_POISON)
+                        local poisonColor = Color(0, 1, 0, 1, 0, 0, 0)
+                        tear.Color = poisonColor
+                    end
+                end
+            end
+        end
+    end
+end
+
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onMomsPursePickup)
 
 mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, mod.OnPlayerGetsPill, MomsBottleOfPillsItem)
@@ -1591,6 +1621,7 @@ mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onFireTearsTinyPlanet)
 mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onFireTearsSerpentsKiss)
 mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onFireTearsPupulaDuplex)
 mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onFireTearsBallOfTar)
+mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onFireTearsBobsCurse)
 
 mod:AddCallback(ModCallbacks.MC_PRE_TEAR_UPDATE, mod.onTearCollideFlatStone)
 
