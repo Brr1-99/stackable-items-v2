@@ -52,6 +52,7 @@ local settings = {
     ball_of_tar = true,
     aquarius = true,
     bobs_curse = true,
+    monstrance = true,
 }
 
 local translation = {
@@ -101,6 +102,7 @@ local translation = {
     ball_of_tar = "Ball of Tar",
     aquarius = "Aquarius",
     bobs_curse = "Bob's Curse",
+    monstrance = "Monstrance",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -198,6 +200,7 @@ local MomsPurseItem = CollectibleType.COLLECTIBLE_MOMS_PURSE
 local BallOfTarItem = CollectibleType.COLLECTIBLE_BALL_OF_TAR
 local AquariusItem = CollectibleType.COLLECTIBLE_AQUARIUS
 local BobsCurseItem = CollectibleType.COLLECTIBLE_BOBS_CURSE
+local MonstranceItem = CollectibleType.COLLECTIBLE_MONSTRANCE
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -249,6 +252,7 @@ local itemsDescriptions = {
     ["ball_of_tar"] = {BallOfTarItem, "{{ColorRainbow}}Increases creep size, adds +15% chance of firing slow tears and gives +30% chance of firing freezing tears instead{{ColorRainbow}}"},
     ["aquarius"] = {AquariusItem, "{{ColorRainbow}}Increases creep size and damage{{ColorRainbow}}"},
     ["bobs_curse"] = {BobsCurseItem, "{{ColorRainbow}}{{ArrowUp}} +15% chance of firing poison tears{{ColorRainbow}}"},
+    ["monstrance"] = {MonstranceItem, "{{ColorRainbow}}Increases aura size and {{Slow}} slows enemies inside{{ColorRainbow}}"},
 }
 
 
@@ -1578,6 +1582,44 @@ function mod:onFireTearsBobsCurse(tear)
     end
 end
 
+--- MonstranceItem stacking - Increases aura size and applies slow to enemies inside
+--- @param player EntityPlayer
+function mod:onPlayerUpdateMonstrance(player)
+    if not settings.monstrance then
+        return
+    end
+
+    if player:HasCollectible(MonstranceItem) then
+        local copyCount = player:GetCollectibleNum(MonstranceItem) - 1
+        if copyCount > 0 then
+            for _, entity in pairs(Isaac.GetRoomEntities()) do
+                if entity.Type == 1000 and entity.Variant == EffectVariant.HALO then
+                    local scaleMultiplier = 1 + (0.2 * copyCount)
+                    entity.SpriteScale = Vector(scaleMultiplier, scaleMultiplier)
+
+                    local baseRadius = 100
+                    local expandedRadius = baseRadius * scaleMultiplier
+
+                    local currentFrame = Game():GetFrameCount()
+
+                    local enemies = Isaac.FindInRadius(entity.Position, expandedRadius, EntityPartition.ENEMY)
+                    for _, enemy in ipairs(enemies) do
+                        if enemy:IsVulnerableEnemy() then
+                            enemy:AddSlowing(EntityRef(player), 30, 0.6, Color(0.5, 0.5, 1, 1, 0, 0, 0))
+                            local distance = entity.Position:Distance(enemy.Position)
+                            if distance > baseRadius then
+                                if (currentFrame + enemy.Index) % 4 == 0 then
+                                    enemy:TakeDamage(0.4, 0, EntityRef(player), 0)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onMomsPursePickup)
 
 mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, mod.OnPlayerGetsPill, MomsBottleOfPillsItem)
@@ -1591,6 +1633,8 @@ mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateSpelunkerHat)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.postUpdateGnawedLeaf)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateBallOfTar)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateAquarius)
+
+mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, mod.onPlayerUpdateMonstrance)
 
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamage, EntityType.ENTITY_PLAYER)
 
