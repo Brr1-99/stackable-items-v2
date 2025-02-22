@@ -53,6 +53,7 @@ local settings = {
     aquarius = true,
     bobs_curse = true,
     monstrance = true,
+    bffs = true,
 }
 
 local translation = {
@@ -103,6 +104,7 @@ local translation = {
     aquarius = "Aquarius",
     bobs_curse = "Bob's Curse",
     monstrance = "Monstrance",
+    bffs = "BFFS!"
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -201,6 +203,7 @@ local BallOfTarItem = CollectibleType.COLLECTIBLE_BALL_OF_TAR
 local AquariusItem = CollectibleType.COLLECTIBLE_AQUARIUS
 local BobsCurseItem = CollectibleType.COLLECTIBLE_BOBS_CURSE
 local MonstranceItem = CollectibleType.COLLECTIBLE_MONSTRANCE
+local BFFSItem = CollectibleType.COLLECTIBLE_BFFS
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -253,6 +256,7 @@ local itemsDescriptions = {
     ["aquarius"] = {AquariusItem, "{{ColorRainbow}}Increases creep size and damage{{ColorRainbow}}"},
     ["bobs_curse"] = {BobsCurseItem, "{{ColorRainbow}}{{ArrowUp}} +15% chance of firing poison tears{{ColorRainbow}}"},
     ["monstrance"] = {MonstranceItem, "{{ColorRainbow}}Increases aura size and {{Slow}} slows enemies inside{{ColorRainbow}}"},
+    ["bffs"] = {BFFSItem, "{{ColorRainbow}}Increases familiar size and damage by 25%{{ColorRainbow}}"},
 }
 
 
@@ -289,6 +293,8 @@ local bloody_gust_extra_tears = 0
 local gnawed_leaf_ticks = 0
 local gnawed_leaf_active = false
 local dropped_red_key = false
+local trackedTears = {}
+local trackedLasers = {}
 
 --- Checks if the player already has an active item in their pocket slot
 ---@param player EntityPlayer
@@ -1620,6 +1626,102 @@ function mod:onPlayerUpdateMonstrance(player)
     end
 end
 
+--- BFFSItem stacking - Increases familiar size and damage
+--- @param familiar EntityFamiliar
+function mod:onFamiliarUpdate(familiar)
+    if not settings.bffs then
+        return
+    end
+    local player = familiar.Player
+    if not player then return end
+    if player:HasCollectible(BFFSItem) then
+        local copyCount = player:GetCollectibleNum(BFFSItem) - 1
+        if copyCount > 0 then
+            familiar.SpriteScale = Vector(1 + 0.2*copyCount, 1 + 0.2*copyCount)
+        end
+    end
+end
+
+--- BFFSItem stacking - Increases familiar size and damage
+--- @param tear EntityTear
+function mod:onFamiliarTearInit(tear)
+    if not settings.bffs then
+        return
+    end
+    local spawner = tear.SpawnerEntity
+    if spawner and spawner:ToFamiliar() then
+        local familiar = spawner:ToFamiliar()
+        if familiar then
+            local player = familiar.Player
+            if player and player:HasCollectible(BFFSItem) then
+                trackedTears[tear.InitSeed] = {
+                    player = player,
+                    copies = player:GetCollectibleNum(BFFSItem) - 1
+                }
+            end
+        end
+    end
+end
+
+--- BFFSItem stacking - Increases familiar size and damage
+--- @param tear EntityTear
+function mod:onFamiliarTearUpdate(tear)
+    if not settings.bffs then
+        return
+    end
+    local data = trackedTears[tear.InitSeed]
+    if data then
+        local copyCount = data.copies
+        if copyCount > 0 then
+            tear.CollisionDamage = tear.CollisionDamage * (1 + 0.25 * copyCount)
+            tear.Scale = tear.Scale * (1 + 0.1 * copyCount)
+            tear.Position = tear.Position + Vector(0, -6*copyCount)
+        end
+        trackedTears[tear.InitSeed] = nil
+    end
+end
+
+--- BFFSItem stacking - Increases familiar size and damage
+--- @param laser EntityLaser
+function mod:onFamiliarLaserInit(laser)
+    if not settings.bffs then
+        return
+    end
+    local spawner = laser.SpawnerEntity
+    if spawner and spawner:ToFamiliar() then
+        local familiar = spawner:ToFamiliar()
+        if familiar then
+            local player = familiar.Player
+            if player and player:HasCollectible(BFFSItem) then
+                local copyCount = player:GetCollectibleNum(BFFSItem) - 1
+                trackedLasers[laser.InitSeed] = {
+                    player = player,
+                    copies = copyCount
+                }
+                laser.Position = laser.Position + Vector(0, -6*copyCount)
+            end
+        end
+    end
+end
+
+--- BFFSItem stacking - Increases familiar size and damage
+--- @param laser EntityLaser
+function mod:onFamiliarLaserUpdate(laser)
+    if not settings.bffs then
+        return
+    end
+    local data = trackedLasers[laser.InitSeed]
+    if data then
+        local copyCount = data.copies
+        if copyCount > 0 then
+            laser.CollisionDamage = laser.CollisionDamage * (1 + 0.25 * copyCount)
+            laser.SpriteScale = laser.SpriteScale * (1 + 0.2 * copyCount)
+        end
+        trackedLasers[laser.InitSeed] = nil
+    end
+end
+
+
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onMomsPursePickup)
 
 mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, mod.OnPlayerGetsPill, MomsBottleOfPillsItem)
@@ -1667,8 +1769,13 @@ mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onFireTearsPupulaDuplex)
 mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onFireTearsBallOfTar)
 mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onFireTearsBobsCurse)
 
+mod:AddCallback(ModCallbacks.MC_POST_TEAR_INIT, mod.onFamiliarTearInit)
+mod:AddCallback(ModCallbacks.MC_POST_LASER_INIT, mod.onFamiliarLaserInit)
+
 mod:AddCallback(ModCallbacks.MC_PRE_TEAR_UPDATE, mod.onTearCollideFlatStone)
 
+mod:AddCallback(ModCallbacks.MC_POST_TEAR_UPDATE, mod.onFamiliarTearUpdate)
+mod:AddCallback(ModCallbacks.MC_PRE_LASER_UPDATE, mod.onFamiliarLaserUpdate)
 mod:AddCallback(ModCallbacks.MC_POST_TEAR_UPDATE, mod.onTearUpdateGodHead)
 
 mod:AddCallback(ModCallbacks.MC_USE_ITEM, mod.onUseItemCB)
@@ -1693,5 +1800,7 @@ mod:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, mod.onClearXRV)
 mod:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, mod.onClearGT)
 
 mod:AddCallback(ModCallbacks.MC_POST_BOMB_INIT, mod.onBombNumber2)
+
+mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, mod.onFamiliarUpdate)
 
 mod:setupMyModConfigMenuSettings()
