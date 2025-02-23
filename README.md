@@ -52,16 +52,20 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - Pupula Duplex
 - Spoon Bender
 - Toxic Shock
-- Spelunker Hat
-- PHD
-- Virgo
-- Lucky Foot
+- Spelunker Hat (does not stack infinitely)
+- PHD (does not stack infinitely)
+- Virgo (does not stack infinitely)
+- Lucky Foot (does not stack infinitely)
 - Lump of Coal
-- Chocolate Milk
+- Chocolate Milk 
 - Flat Stone (does not stack infinitely)
 - Mom's Purse (does not stack infinitely)
 - Ball of Tar
 - Aquarius
+- Bob's Curse
+- Monstrance
+- BFFS! (Still working on some familiars, laser and tear familiars done)
+- Vengeful Spirit
 
 - **More items coming soon!**
 
@@ -74,6 +78,6 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - **TheTurtleMelon** – Ideas & Mod Thumbnail
 - **PixelPlz** – Boss rush & Hush door code for X-Ray Vision
 
-### Version: 2.24
+### Version: 2.27
 ### Tags: Lua, Items, Tweaks, Update
 

@@ -54,6 +54,7 @@ local settings = {
     bobs_curse = true,
     monstrance = true,
     bffs = true,
+    vengeul_spirit = true,
 }
 
 local translation = {
@@ -104,7 +105,9 @@ local translation = {
     aquarius = "Aquarius",
     bobs_curse = "Bob's Curse",
     monstrance = "Monstrance",
-    bffs = "BFFS!"
+    bffs = "BFFS!",
+    vengeul_spirit = "Vengeful Spirit",
+
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -204,6 +207,7 @@ local AquariusItem = CollectibleType.COLLECTIBLE_AQUARIUS
 local BobsCurseItem = CollectibleType.COLLECTIBLE_BOBS_CURSE
 local MonstranceItem = CollectibleType.COLLECTIBLE_MONSTRANCE
 local BFFSItem = CollectibleType.COLLECTIBLE_BFFS
+local VengefulSpiritItem = CollectibleType.COLLECTIBLE_VENGEFUL_SPIRIT
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -257,6 +261,7 @@ local itemsDescriptions = {
     ["bobs_curse"] = {BobsCurseItem, "{{ColorRainbow}}{{ArrowUp}} +15% chance of firing poison tears{{ColorRainbow}}"},
     ["monstrance"] = {MonstranceItem, "{{ColorRainbow}}Increases aura size and {{Slow}} slows enemies inside{{ColorRainbow}}"},
     ["bffs"] = {BFFSItem, "{{ColorRainbow}}Increases familiar size and damage by 25%{{ColorRainbow}}"},
+    ["vengeul_spirit"] = {VengefulSpiritItem, "{{ColorRainbow}}Increases maximum number of wisps to 26 and spawns an additional wisp when taking damage{{ColorRainbow}}"},
 }
 
 
@@ -295,6 +300,7 @@ local gnawed_leaf_active = false
 local dropped_red_key = false
 local trackedTears = {}
 local trackedLasers = {}
+local trackedFamiliars = {}
 
 --- Checks if the player already has an active item in their pocket slot
 ---@param player EntityPlayer
@@ -1638,6 +1644,13 @@ function mod:onFamiliarUpdate(familiar)
         local copyCount = player:GetCollectibleNum(BFFSItem) - 1
         if copyCount > 0 then
             familiar.SpriteScale = Vector(1 + 0.2*copyCount, 1 + 0.2*copyCount)
+            if familiar.CollisionDamage > 0 then
+                if trackedFamiliars[familiar.InitSeed] then
+                    familiar.CollisionDamage = trackedFamiliars[familiar.InitSeed]* (1 + 0.2*copyCount)
+                else
+                    trackedFamiliars[familiar.InitSeed] = familiar.CollisionDamage
+                end
+            end
         end
     end
 end
@@ -1721,6 +1734,24 @@ function mod:onFamiliarLaserUpdate(laser)
     end
 end
 
+--- VengefulSpiritItem Stacking - Adds extra wisp on hit and increases max number to 26
+--- @param entity Entity
+function mod:onDamageVengefulSpirit(entity)
+    if not settings.vengeul_spirit then
+        return
+    end
+    local player = entity:ToPlayer()
+    if player then
+        if player:HasCollectible(VengefulSpiritItem) then
+            local copyCount = player:GetCollectibleNum(VengefulSpiritItem) - 1
+            if copyCount > 0 then
+                for i=1, copyCount, 1 do
+                    player:AddWisp(VengefulSpiritItem, player.Position, true)
+                end
+            end
+        end
+    end
+end
 
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onMomsPursePickup)
 
@@ -1748,6 +1779,7 @@ mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageInfestation, Entity
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBloodyLust, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBloodyGust, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageScapular, EntityType.ENTITY_PLAYER)
+mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageVengefulSpirit, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBossHungrySoul)
 
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, mod.onDamageDealtMysteriousLiquid)
