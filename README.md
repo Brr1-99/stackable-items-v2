@@ -18,7 +18,7 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - Cursed Eye
 - Car Battery
 - Loki's Horns
-- Giant Cell (WIP)
+- Giant Cell
 - X-Ray Vision
 - Isaac's Tomb
 - Heartbreak
@@ -28,21 +28,20 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - Schoolbag
 - Infestation
 - Infestation 2
-- Jumper Cables (WIP)
-- Eye Sore (WIP)
+- Jumper Cables
+- Eye Sore
 - Empty Heart
 - 9 Volt
 - Bloody Lust (WIP)
 - Bloody Gust (WIP)
 - Lusty Blood (WIP)
 - The Stairway
-- Scapular (WIP)
-- Gnawed Leaf (WIP)
+- Scapular
+- Gnawed Leaf
 - Linger Bean
 - Godhead
 - No. 2 (WIP)
 - Tiny Planet
-- Mom's Key (WIP)
 - Serpent's Kiss
 
 ### New Items (Mod v2)
@@ -64,8 +63,8 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - Aquarius
 - Bob's Curse
 - Monstrance
-- BFFS! (Still working on some familiars, laser and tear familiars done)
-- Vengeful Spirit
+- BFFS! (Still working on some familiars, laser, tear and contact damage familiars done)
+- Vengeful Spirit (does not stack infinitely)
 
 - **More items coming soon!**
 
@@ -78,6 +77,6 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - **TheTurtleMelon** – Ideas & Mod Thumbnail
 - **PixelPlz** – Boss rush & Hush door code for X-Ray Vision
 
-### Version: 2.27
+### Version: 2.29
 ### Tags: Lua, Items, Tweaks, Update
 

@@ -15,7 +15,7 @@ https://steamcommunity.com/sharedfiles/filedetails/?id=3063257113
 - Cursed Eye 
 - Car Battery
 - Loki's Horns (does not stack infinitely)
-- Giant Cell (WIP)
+- Giant Cell
 - X-Ray Vision (does not stack infinitely)
 - Isaac's Tomb
 - Heartbreak
@@ -73,7 +73,7 @@ https://youtu.be/CShMxC-pfMA?si=-DBtW0t3D2tMEWcz
 - Hutts - Original Mod Idea
 - TheTurtleMelon - Ideas &amp; Mod Thumbnail
 - PixelPlz - Boss rush and Hush door code for X-Ray vision</description>
-    <version>2.28</version>
+    <version>2.29</version>
     <visibility>Public</visibility>
     <tag id="Lua"/>
     <tag id="Items"/>

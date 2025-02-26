@@ -107,7 +107,6 @@ local translation = {
     monstrance = "Monstrance",
     bffs = "BFFS!",
     vengeul_spirit = "Vengeful Spirit",
-
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -627,16 +626,19 @@ function mod:onUseItemCB(item, _, player_entity)
 end
 
 --- Adds an additional Minisaac when damaged per stack of Giant Cell
-function mod:onDamageGC()
+--- @param entity Entity
+function mod:onDamageGC(entity)
     if not settings.giant_cell then
         return
     end
-    local player = Isaac.GetPlayer(0)
-    if player:HasCollectible(GiantCellItem) then
-        local copyCount = player:GetCollectibleNum(GiantCellItem) - 1
-        if copyCount > 0 then
-            for i=1, copyCount, 1 do
-                player:AddMinisaac(player.Position, true)
+    local player = entity:ToPlayer()
+    if player then
+        if player:HasCollectible(GiantCellItem) then
+            local copyCount = player:GetCollectibleNum(GiantCellItem) - 1
+            if copyCount > 0 then
+                for i=1, copyCount, 1 do
+                    player:AddMinisaac(player.Position, true)
+                end
             end
         end
     end
@@ -1290,8 +1292,8 @@ function mod:onNewRoomToxicShock()
             local copyCount = player:GetCollectibleNum(ToxicShockItem) - 1
             if copyCount > 0 then
                 for _, entity in pairs(Isaac.GetRoomEntities()) do
-                    if entity:IsVulnerableEnemy() then
-                        entity:AddPoison(EntityRef(Isaac.GetPlayer(0)), 2 + copyCount, player.Damage + (copyCount*2))
+                    if entity:IsVulnerableEnemy() and not entity:IsBoss() then
+                        entity:AddPoison(EntityRef(player), 2 + copyCount, player.Damage + (copyCount*2))
                     end
                 end
             end
@@ -1299,7 +1301,7 @@ function mod:onNewRoomToxicShock()
     end
 end
 
---- Stacking Toxic Shock will now posion the bosses overtime (when the cd for boss status expires, roughly every 5 seconds)
+--- Stacking Toxic Shock will now posion the bosses indefinite
 function mod:onUpdateToxicShockBoss()
     if not settings.toxic_shock then
         return
@@ -1313,7 +1315,8 @@ function mod:onUpdateToxicShockBoss()
                 if copyCount > 0 then
                     for _, entity in pairs(Isaac.GetRoomEntities()) do
                         if entity:IsBoss() and not entity:IsDead() then
-                            entity:AddPoison(EntityRef(Isaac.GetPlayer(0)), 4, player.Damage + (copyCount*2))
+                            entity:SetBossStatusEffectCooldown(0)
+                            entity:AddPoison(EntityRef(player), 4, math.min((player.Damage + (copyCount*2)) / 4, 2))
                         end
                     end
                 end
