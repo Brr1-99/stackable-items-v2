@@ -65,6 +65,7 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - Monstrance
 - BFFS! (Still working on some familiars, laser, tear and contact damage familiars done)
 - Vengeful Spirit (does not stack infinitely)
+- Purgatory
 
 - **More items coming soon!**
 
@@ -77,6 +78,6 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - **TheTurtleMelon** – Ideas & Mod Thumbnail
 - **PixelPlz** – Boss rush & Hush door code for X-Ray Vision
 
-### Version: 2.29
+### Version: 2.30
 ### Tags: Lua, Items, Tweaks, Update
 

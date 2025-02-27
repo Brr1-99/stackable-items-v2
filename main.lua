@@ -55,6 +55,7 @@ local settings = {
     monstrance = true,
     bffs = true,
     vengeul_spirit = true,
+    purgatory = true,
 }
 
 local translation = {
@@ -107,6 +108,7 @@ local translation = {
     monstrance = "Monstrance",
     bffs = "BFFS!",
     vengeul_spirit = "Vengeful Spirit",
+    purgatory = "Purgatory",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -207,6 +209,7 @@ local BobsCurseItem = CollectibleType.COLLECTIBLE_BOBS_CURSE
 local MonstranceItem = CollectibleType.COLLECTIBLE_MONSTRANCE
 local BFFSItem = CollectibleType.COLLECTIBLE_BFFS
 local VengefulSpiritItem = CollectibleType.COLLECTIBLE_VENGEFUL_SPIRIT
+local PurgatoryItem = CollectibleType.COLLECTIBLE_PURGATORY
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -261,6 +264,7 @@ local itemsDescriptions = {
     ["monstrance"] = {MonstranceItem, "{{ColorRainbow}}Increases aura size and {{Slow}} slows enemies inside{{ColorRainbow}}"},
     ["bffs"] = {BFFSItem, "{{ColorRainbow}}Increases familiar size and damage by 25%{{ColorRainbow}}"},
     ["vengeul_spirit"] = {VengefulSpiritItem, "{{ColorRainbow}}Increases maximum number of wisps to 26 and spawns an additional wisp when taking damage{{ColorRainbow}}"},
+    ["purgatory"] = {PurgatoryItem, "{{ColorRainbow}}Spawns an additional purgatory crack{{ColorRainbow}}"},
 }
 
 
@@ -1756,6 +1760,57 @@ function mod:onDamageVengefulSpirit(entity)
     end
 end
 
+--- PurgatoryItem Stacking - Adds extra purgatory crack on the floor
+function mod:onUpdatePurgatory()
+    for i = 0, Game():GetNumPlayers() - 1 do
+        local player = Isaac.GetPlayer(i)
+        local copyCount = player:GetCollectibleNum(PurgatoryItem) - 1
+
+        if copyCount <= 0 then return end
+
+        local room = Game():GetRoom()
+        local purgatoryEffects = Isaac.FindByType(EntityType.ENTITY_EFFECT, EffectVariant.PURGATORY)
+
+        if not room:IsClear() and #purgatoryEffects <= 1 then
+            for i = 0, copyCount do
+                local validPosition = nil
+                local attempts = 0
+                repeat
+                    local randomPos = room:GetRandomPosition(10)
+                    if mod:isValidPurgatoryPosition(randomPos) then
+                        validPosition = randomPos
+                    end
+                    attempts = attempts + 1
+                until validPosition or attempts > 20
+                if validPosition then
+                    Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.PURGATORY, 0, validPosition, Vector.Zero, player)
+                end
+            end
+        end
+    end
+end
+
+--- PurgatoryItem Stacking - Always spawn the crack on an empty floor tile
+--- @param position Vector
+--- @return boolean
+function mod:isValidPurgatoryPosition(position)
+    local room = Game():GetRoom()
+    local gridIndex = room:GetGridIndex(position)
+    local gridEntity = room:GetGridEntity(gridIndex)
+
+    if gridEntity and (gridEntity.Desc.Type ~= GridEntityType.GRID_NULL and gridEntity.Desc.Type ~= GridEntityType.GRID_DECORATION) then
+        return false
+    end
+
+    for _, entity in ipairs(Isaac.FindByType(EntityType.ENTITY_EFFECT, EffectVariant.PURGATORY)) do
+        if entity.Position:DistanceSquared(position) < 25 then
+            return false
+        end
+    end
+
+    return true
+end
+
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onMomsPursePickup)
 
 mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, mod.OnPlayerGetsPill, MomsBottleOfPillsItem)
@@ -1769,6 +1824,7 @@ mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateSpelunkerHat)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.postUpdateGnawedLeaf)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateBallOfTar)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateAquarius)
+mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdatePurgatory)
 
 mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, mod.onPlayerUpdateMonstrance)
 
