@@ -604,7 +604,8 @@ end
 --- Uses the active item one additional time per stack of car battery
 --- @param item CollectibleType
 --- @param player_entity EntityPlayer
-function mod:onUseItemCB(item, _, player_entity)
+--- @param flags any
+function mod:onUseItemCB(item, _, player_entity, flags)
     if not settings.car_battery then
         return
     end
