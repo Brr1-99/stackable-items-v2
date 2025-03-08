@@ -56,6 +56,7 @@ local settings = {
     bffs = true,
     vengeul_spirit = true,
     purgatory = true,
+    hive_mind = true,
 }
 
 local translation = {
@@ -109,6 +110,7 @@ local translation = {
     bffs = "BFFS!",
     vengeul_spirit = "Vengeful Spirit",
     purgatory = "Purgatory",
+    hive_mind = "Hive Mind",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -210,6 +212,7 @@ local MonstranceItem = CollectibleType.COLLECTIBLE_MONSTRANCE
 local BFFSItem = CollectibleType.COLLECTIBLE_BFFS
 local VengefulSpiritItem = CollectibleType.COLLECTIBLE_VENGEFUL_SPIRIT
 local PurgatoryItem = CollectibleType.COLLECTIBLE_PURGATORY
+local HiveMindItem = CollectibleType.COLLECTIBLE_HIVE_MIND
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -265,6 +268,7 @@ local itemsDescriptions = {
     ["bffs"] = {BFFSItem, "{{ColorRainbow}}Increases familiar size and damage by 25%{{ColorRainbow}}"},
     ["vengeul_spirit"] = {VengefulSpiritItem, "{{ColorRainbow}}Increases maximum number of wisps to 26 and spawns an additional wisp when taking damage{{ColorRainbow}}"},
     ["purgatory"] = {PurgatoryItem, "{{ColorRainbow}}Spawns an additional purgatory crack{{ColorRainbow}}"},
+    ["hive_mind"] = {HiveMindItem, "{{ColorRainbow}}Further increases spider/flies damage and size by 25% {{ColorRainbow}}"},
 }
 
 
@@ -304,6 +308,19 @@ local dropped_red_key = false
 local trackedTears = {}
 local trackedLasers = {}
 local trackedFamiliars = {}
+local hiveMindFamiliars = {
+    [FamiliarVariant.DADDY_LONGLEGS] = true,
+    [FamiliarVariant.SISSY_LONGLEGS] = true,
+    [FamiliarVariant.SPIDER_MOD] = true,
+    [FamiliarVariant.BLUE_FLY] = true,
+    [FamiliarVariant.BLUE_SPIDER] = true,
+    [FamiliarVariant.FOREVER_ALONE] = true,
+    [FamiliarVariant.DISTANT_ADMIRATION] = true,
+    [FamiliarVariant.BIG_FAN] = true,
+    [FamiliarVariant.BBF] = true,
+}
+
+local trackedFamiliarsHiveMind = {}
 
 --- Checks if the player already has an active item in their pocket slot
 ---@param player EntityPlayer
@@ -1642,7 +1659,7 @@ end
 
 --- BFFSItem stacking - Increases familiar size and damage
 --- @param familiar EntityFamiliar
-function mod:onFamiliarUpdate(familiar)
+function mod:onFamiliarUpdateBFFS(familiar)
     if not settings.bffs then
         return
     end
@@ -1653,11 +1670,10 @@ function mod:onFamiliarUpdate(familiar)
         if copyCount > 0 then
             familiar.SpriteScale = Vector(1 + 0.2*copyCount, 1 + 0.2*copyCount)
             if familiar.CollisionDamage > 0 then
-                if trackedFamiliars[familiar.InitSeed] then
-                    familiar.CollisionDamage = trackedFamiliars[familiar.InitSeed]* (1 + 0.2*copyCount)
-                else
+                if not trackedFamiliars[familiar.InitSeed] then
                     trackedFamiliars[familiar.InitSeed] = familiar.CollisionDamage
                 end
+                familiar.CollisionDamage = trackedFamiliars[familiar.InitSeed] * (1 + 0.25 * copyCount)
             end
         end
     end
@@ -1812,6 +1828,28 @@ function mod:isValidPurgatoryPosition(position)
     return true
 end
 
+--- HiveMindItem stacking - Increases familiar size and damage
+--- @param familiar EntityFamiliar
+function mod:onFamiliarUpdateHiveMind(familiar)
+    if not settings.bffs then
+        return
+    end
+    local player = familiar.Player
+    if not player then return end
+    if player:HasCollectible(HiveMindItem) and hiveMindFamiliars[familiar.Variant] then
+        local copyCount = player:GetCollectibleNum(HiveMindItem) - 1
+        if copyCount > 0 then
+            familiar.SpriteScale = Vector(1 + 0.2*copyCount, 1 + 0.2*copyCount)
+            if familiar.CollisionDamage > 0 then
+                if not trackedFamiliarsHiveMind[familiar.InitSeed] then
+                    trackedFamiliarsHiveMind[familiar.InitSeed] = familiar.CollisionDamage
+                end
+                familiar.CollisionDamage = trackedFamiliarsHiveMind[familiar.InitSeed] * (1 + 0.2 * copyCount)
+            end
+        end
+    end
+end
+
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onMomsPursePickup)
 
 mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, mod.OnPlayerGetsPill, MomsBottleOfPillsItem)
@@ -1893,6 +1931,7 @@ mod:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, mod.onClearGT)
 
 mod:AddCallback(ModCallbacks.MC_POST_BOMB_INIT, mod.onBombNumber2)
 
-mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, mod.onFamiliarUpdate)
+mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, mod.onFamiliarUpdateBFFS)
+mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, mod.onFamiliarUpdateHiveMind)
 
 mod:setupMyModConfigMenuSettings()
