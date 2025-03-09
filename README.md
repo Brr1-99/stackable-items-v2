@@ -67,6 +67,7 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - Vengeful Spirit (does not stack infinitely)
 - Purgatory
 - Hive Mind
+- Bone Spurs
 
 - **More items coming soon!**
 

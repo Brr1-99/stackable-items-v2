@@ -57,6 +57,7 @@ local settings = {
     vengeul_spirit = true,
     purgatory = true,
     hive_mind = true,
+    bone_spurs = true,
 }
 
 local translation = {
@@ -111,6 +112,7 @@ local translation = {
     vengeul_spirit = "Vengeful Spirit",
     purgatory = "Purgatory",
     hive_mind = "Hive Mind",
+    bone_spurs = "Bone Spurs",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -213,6 +215,7 @@ local BFFSItem = CollectibleType.COLLECTIBLE_BFFS
 local VengefulSpiritItem = CollectibleType.COLLECTIBLE_VENGEFUL_SPIRIT
 local PurgatoryItem = CollectibleType.COLLECTIBLE_PURGATORY
 local HiveMindItem = CollectibleType.COLLECTIBLE_HIVE_MIND
+local BoneSpursItem = CollectibleType.COLLECTIBLE_BONE_SPURS
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -269,6 +272,7 @@ local itemsDescriptions = {
     ["vengeul_spirit"] = {VengefulSpiritItem, "{{ColorRainbow}}Increases maximum number of wisps to 26 and spawns an additional wisp when taking damage{{ColorRainbow}}"},
     ["purgatory"] = {PurgatoryItem, "{{ColorRainbow}}Spawns an additional purgatory crack{{ColorRainbow}}"},
     ["hive_mind"] = {HiveMindItem, "{{ColorRainbow}}Further increases spider/flies damage and size by 25% {{ColorRainbow}}"},
+    ["bone_spurs"] = {BoneSpursItem, "{{ColorRainbow}}Spawns an extra bone familiar when killing an enemy{{ColorRainbow}}"},
 }
 
 
@@ -1780,6 +1784,9 @@ end
 --- PurgatoryItem Stacking - Adds extra purgatory crack on the floor
 function mod:onUpdatePurgatory()
     for i = 0, Game():GetNumPlayers() - 1 do
+        if not settings.purgatory then
+            return
+        end
         local player = Isaac.GetPlayer(i)
         local copyCount = player:GetCollectibleNum(PurgatoryItem) - 1
 
@@ -1850,6 +1857,32 @@ function mod:onFamiliarUpdateHiveMind(familiar)
     end
 end
 
+-- BoneSpursItem Stacking will spawn a new bone for each extra copy when killing an enemy
+---@param entity Entity
+function mod:onEnemyKillBoneSpurs(entity)
+    if not settings.bone_spurs then
+        return
+    end
+    if not entity:IsEnemy() or entity:IsBoss() then
+        return
+    end
+
+    for i = 0, Game():GetNumPlayers() - 1 do
+        local player = Isaac.GetPlayer(i)
+        if not player:HasCollectible(BoneSpursItem) then return end
+
+        local copyCount = player:GetCollectibleNum(BoneSpursItem) - 1
+
+        if copyCount > 0 then
+            for i = 1, copyCount do
+                local spawnPosition = entity.Position + Vector(math.random(-20, 20), math.random(-20, 20))
+                Isaac.Spawn(EntityType.ENTITY_FAMILIAR, FamiliarVariant.BONE_SPUR, 0, spawnPosition, Vector.Zero, player)
+            end
+        end
+
+    end
+end
+
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onMomsPursePickup)
 
 mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, mod.OnPlayerGetsPill, MomsBottleOfPillsItem)
@@ -1886,6 +1919,7 @@ mod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, mod.onKillInfestationTwo)
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, mod.onKillJumperCables)
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, mod.onKillEnemyLustyBlood)
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, mod.onKillEnemyHungrySoul)
+mod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, mod.onEnemyKillBoneSpurs)
 
 mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onTearInitChocoMilk)
 mod:AddCallback(ModCallbacks.MC_POST_FIRE_TEAR, mod.onFireTearsCE)
