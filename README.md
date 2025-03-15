@@ -68,6 +68,8 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - Purgatory
 - Hive Mind
 - Bone Spurs
+- Pound of Flesh
+- Dead Bird
 
 - **More items coming soon!**
 
@@ -80,6 +82,6 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - **TheTurtleMelon** – Ideas & Mod Thumbnail
 - **PixelPlz** – Boss rush & Hush door code for X-Ray Vision
 
-### Version: 2.32
+### Version: 2.34
 ### Tags: Lua, Items, Tweaks, Update
 

@@ -58,6 +58,8 @@ local settings = {
     purgatory = true,
     hive_mind = true,
     bone_spurs = true,
+    pound_of_flesh = true,
+    dead_bird = true,
 }
 
 local translation = {
@@ -113,6 +115,8 @@ local translation = {
     purgatory = "Purgatory",
     hive_mind = "Hive Mind",
     bone_spurs = "Bone Spurs",
+    pound_of_flesh = "Pound Of Flesh",
+    dead_bird = "Dead Bird",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -216,6 +220,8 @@ local VengefulSpiritItem = CollectibleType.COLLECTIBLE_VENGEFUL_SPIRIT
 local PurgatoryItem = CollectibleType.COLLECTIBLE_PURGATORY
 local HiveMindItem = CollectibleType.COLLECTIBLE_HIVE_MIND
 local BoneSpursItem = CollectibleType.COLLECTIBLE_BONE_SPURS
+local PoundOfFleshItem = CollectibleType.COLLECTIBLE_POUND_OF_FLESH
+local DeadBirdItem = CollectibleType.COLLECTIBLE_DEAD_BIRD
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -273,6 +279,8 @@ local itemsDescriptions = {
     ["purgatory"] = {PurgatoryItem, "{{ColorRainbow}}Spawns an additional purgatory crack{{ColorRainbow}}"},
     ["hive_mind"] = {HiveMindItem, "{{ColorRainbow}}Further increases spider/flies damage and size by 25% {{ColorRainbow}}"},
     ["bone_spurs"] = {BoneSpursItem, "{{ColorRainbow}}Spawns an extra bone familiar when killing an enemy{{ColorRainbow}}"},
+    ["pound_of_flesh"] = {PoundOfFleshItem, "{{ColorRainbow}}Reduces devil deals cost by 50% (minimun 1$ cost){{ColorRainbow}}"},
+    ["dead_bird"] = {DeadBirdItem, "{{ColorRainbow}}Spawns an extra bird when taking damage{{ColorRainbow}}"},
 }
 
 
@@ -300,6 +308,7 @@ local spawning_laser = false
 local using_item = false
 local current_scapular_charge = {0, 0, 0, 0, 0, 0, 0, 0}
 local scapular_activate = {false, false, false, false, false, false, false, false}
+local spawn_dead_bird = {true, true, true, true, true, true, true, true}
 local jumper_cables_kills = 0
 local current_room_kills = 0
 local lusty_blood_extra_damage = 0
@@ -325,6 +334,7 @@ local hiveMindFamiliars = {
 }
 
 local trackedFamiliarsHiveMind = {}
+local devil_price_updated = false
 
 --- Checks if the player already has an active item in their pocket slot
 ---@param player EntityPlayer
@@ -930,6 +940,7 @@ end
 --- Resets value of hits taken on current floor, extra damage from bloody lust, and extra tears from bloody gust
 function mod:onNewFloor()
     dropped_red_key = false
+    devil_price_updated = false
     local player = Isaac.GetPlayer(0)
     current_floor_hits_taken = 0
     if player:HasCollectible(BloodyLustItem) then
@@ -1883,7 +1894,83 @@ function mod:onEnemyKillBoneSpurs(entity)
     end
 end
 
+--- PoundOfFleshItem Stacking - Reduces devil deals costs by 50% per extra copy
+function mod:onDevilDealPoundOfFlesh()
+    if not settings.pound_of_flesh then
+        return
+    end
+    local room = Game():GetRoom()
+
+    if room:GetType() ~= RoomType.ROOM_DEVIL then
+        return
+    end
+    if devil_price_updated == false then
+        for _, entity in pairs(Isaac.GetRoomEntities()) do
+            if entity.Type == EntityType.ENTITY_PICKUP and entity.Variant == PickupVariant.PICKUP_COLLECTIBLE then
+                local pickup = entity:ToPickup()
+                if pickup then
+                    for i = 0, Game():GetNumPlayers() - 1 do
+                        local player = Isaac.GetPlayer(i)
+                        if player:HasCollectible(PoundOfFleshItem) then
+                            local copyCount = player:GetCollectibleNum(PoundOfFleshItem) - 1
+                            if copyCount > 0 then
+                                local basePrice = pickup.Price
+    
+                                local newPrice = math.max(math.floor(basePrice / (2 ^ copyCount)), 1)
+    
+                                pickup.AutoUpdatePrice = false
+                                pickup.Price = newPrice
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        devil_price_updated = true
+    end
+end
+
+--- Stacking PoundOfFleshItem will refresh the cost on ìtem pickup
+--- @param type CollectibleType
+function mod:onPoundFleshPickup(type)
+    if not settings.pound_of_flesh then
+        return
+    end
+    if type == CollectibleType.COLLECTIBLE_POUND_OF_FLESH then
+        devil_price_updated = false
+    end
+end
+
+--- DeadBirdItem Stacking - Spawns extra dead bird familiar when taking damage
+--- @param entity Entity
+function mod:onDamageDeadBird(entity)
+    if not settings.dead_bird then
+        return
+    end
+    local player = entity:ToPlayer()
+    if player then
+        if player:HasCollectible(DeadBirdItem) then
+            local copyCount = player:GetCollectibleNum(DeadBirdItem) - 1
+            if copyCount > 0 and spawn_dead_bird[player.Index + 1] == true then
+                for i=1, copyCount, 1 do
+                    Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.DEAD_BIRD, 0, player.Position, Vector.Zero, player)
+                end
+                spawn_dead_bird[player.Index + 1] = false
+            end
+        end
+    end
+end
+
+--- DeadBirdItem Stacking - Resets damage taken on new room
+function mod:onNewRoomDeadBird()
+    if not settings.dead_bird then
+        return
+    end
+    spawn_dead_bird = {true, true, true, true, true, true, true, true}
+end
+
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onMomsPursePickup)
+mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onPoundFleshPickup)
 
 mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, mod.OnPlayerGetsPill, MomsBottleOfPillsItem)
 
@@ -1897,6 +1984,7 @@ mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.postUpdateGnawedLeaf)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateBallOfTar)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateAquarius)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdatePurgatory)
+mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onDevilDealPoundOfFlesh)
 
 mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, mod.onPlayerUpdateMonstrance)
 
@@ -1911,6 +1999,7 @@ mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBloodyLust, EntityT
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBloodyGust, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageScapular, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageVengefulSpirit, EntityType.ENTITY_PLAYER)
+mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageDeadBird, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBossHungrySoul)
 
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, mod.onDamageDealtMysteriousLiquid)
@@ -1959,6 +2048,7 @@ mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.onNewRoom)
 mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.onNewRoomXRV)
 mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.onNewRoomStairway)
 mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.onNewRoomToxicShock)
+mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.onNewRoomDeadBird)
 
 mod:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, mod.onClearXRV)
 mod:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, mod.onClearGT)
