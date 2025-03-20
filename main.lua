@@ -60,6 +60,7 @@ local settings = {
     bone_spurs = true,
     pound_of_flesh = true,
     dead_bird = true,
+    fanny_pack = true,
 }
 
 local translation = {
@@ -117,6 +118,7 @@ local translation = {
     bone_spurs = "Bone Spurs",
     pound_of_flesh = "Pound Of Flesh",
     dead_bird = "Dead Bird",
+    fanny_pack = "Fanny Pack",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -222,6 +224,7 @@ local HiveMindItem = CollectibleType.COLLECTIBLE_HIVE_MIND
 local BoneSpursItem = CollectibleType.COLLECTIBLE_BONE_SPURS
 local PoundOfFleshItem = CollectibleType.COLLECTIBLE_POUND_OF_FLESH
 local DeadBirdItem = CollectibleType.COLLECTIBLE_DEAD_BIRD
+local FannyPackItem = CollectibleType.COLLECTIBLE_FANNY_PACK
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -281,6 +284,7 @@ local itemsDescriptions = {
     ["bone_spurs"] = {BoneSpursItem, "{{ColorRainbow}}Spawns an extra bone familiar when killing an enemy{{ColorRainbow}}"},
     ["pound_of_flesh"] = {PoundOfFleshItem, "{{ColorRainbow}}Reduces devil deals cost by 50% (minimun 1$ cost){{ColorRainbow}}"},
     ["dead_bird"] = {DeadBirdItem, "{{ColorRainbow}}Spawns an extra bird when taking damage{{ColorRainbow}}"},
+    ["fanny_pack"] = {FannyPackItem, "{{ColorRainbow}}Each copy has a 50% chance of dropping a random pickup{{ColorRainbow}}"},
 }
 
 
@@ -335,6 +339,13 @@ local hiveMindFamiliars = {
 
 local trackedFamiliarsHiveMind = {}
 local devil_price_updated = false
+
+local pickupTypes = {
+        { PickupVariant.PICKUP_COIN, { CoinSubType.COIN_PENNY, CoinSubType.COIN_NICKEL, CoinSubType.COIN_DIME, CoinSubType.COIN_LUCKYPENNY } },
+        { PickupVariant.PICKUP_KEY, { KeySubType.KEY_NORMAL, KeySubType.KEY_GOLDEN } },
+        { PickupVariant.PICKUP_BOMB, { BombSubType.BOMB_NORMAL, BombSubType.BOMB_GOLDEN, BombSubType.BOMB_GIGA } },
+        { PickupVariant.PICKUP_HEART, { HeartSubType.HEART_FULL, HeartSubType.HEART_HALF, HeartSubType.HEART_SOUL, HeartSubType.HEART_BLACK, HeartSubType.HEART_GOLDEN, HeartSubType.HEART_BONE } },
+}
 
 --- Checks if the player already has an active item in their pocket slot
 ---@param player EntityPlayer
@@ -1969,6 +1980,28 @@ function mod:onNewRoomDeadBird()
     spawn_dead_bird = {true, true, true, true, true, true, true, true}
 end
 
+--- FannyPackItem Stacking - Spawns extra pickups when taking damage
+--- @param entity Entity
+function mod:onDamageFannyPack(entity)
+    if not settings.fanny_pack then
+        return
+    end
+    local player = entity:ToPlayer()
+    if player then
+        if player:HasCollectible(FannyPackItem) then
+            local copyCount = player:GetCollectibleNum(FannyPackItem) - 1
+            if copyCount > 0 then
+                for i = 1, copyCount do
+                    if math.random() < 0.5 then
+                        local pickup = pickupTypes[math.random(#pickupTypes)]
+                        Isaac.Spawn(EntityType.ENTITY_PICKUP, pickup[1], pickup[2][math.random(#pickup[2])], Vector(player.Position.X + math.random(-20, 20), player.Position.Y + math.random(-20, 20)), Vector.Zero, player)
+                    end
+                end
+            end
+        end
+    end
+end
+
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onMomsPursePickup)
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onPoundFleshPickup)
 
@@ -2000,6 +2033,7 @@ mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBloodyGust, EntityT
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageScapular, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageVengefulSpirit, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageDeadBird, EntityType.ENTITY_PLAYER)
+mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageFannyPack, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBossHungrySoul)
 
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, mod.onDamageDealtMysteriousLiquid)

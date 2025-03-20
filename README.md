@@ -70,6 +70,7 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - Bone Spurs
 - Pound of Flesh
 - Dead Bird
+- Fanny Pack
 
 - **More items coming soon!**
 
