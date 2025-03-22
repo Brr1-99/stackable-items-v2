@@ -61,6 +61,7 @@ local settings = {
     pound_of_flesh = true,
     dead_bird = true,
     fanny_pack = true,
+    mr_mega = true,
 }
 
 local translation = {
@@ -119,6 +120,7 @@ local translation = {
     pound_of_flesh = "Pound Of Flesh",
     dead_bird = "Dead Bird",
     fanny_pack = "Fanny Pack",
+    mr_mega = "Mr Mega",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -225,6 +227,7 @@ local BoneSpursItem = CollectibleType.COLLECTIBLE_BONE_SPURS
 local PoundOfFleshItem = CollectibleType.COLLECTIBLE_POUND_OF_FLESH
 local DeadBirdItem = CollectibleType.COLLECTIBLE_DEAD_BIRD
 local FannyPackItem = CollectibleType.COLLECTIBLE_FANNY_PACK
+local MrMegaItem = CollectibleType.COLLECTIBLE_MR_MEGA
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -285,6 +288,7 @@ local itemsDescriptions = {
     ["pound_of_flesh"] = {PoundOfFleshItem, "{{ColorRainbow}}Reduces devil deals cost by 50% (minimun 1$ cost){{ColorRainbow}}"},
     ["dead_bird"] = {DeadBirdItem, "{{ColorRainbow}}Spawns an extra bird when taking damage{{ColorRainbow}}"},
     ["fanny_pack"] = {FannyPackItem, "{{ColorRainbow}}Each copy has a 50% chance of dropping a random pickup{{ColorRainbow}}"},
+    ["mr_mega"] = {MrMegaItem, "{{ColorRainbow}}Increases bomb damage by 25%{{ColorRainbow}}"},
 }
 
 
@@ -2002,6 +2006,19 @@ function mod:onDamageFannyPack(entity)
     end
 end
 
+--- MrMegaItem Stacking - Increases bomb damage by 25%
+--- @param bomb EntityBomb
+function mod:onBombMrMega(bomb)
+    local player = bomb.SpawnerEntity and bomb.SpawnerEntity:ToPlayer()
+    if not player then return end
+
+    local copies = player:GetCollectibleNum(MrMegaItem) - 1
+    if copies < 1 then return end
+
+    local extraMultiplier = 1 + (copies * 0.25)
+    bomb.ExplosionDamage = bomb.ExplosionDamage * extraMultiplier
+end
+
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onMomsPursePickup)
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onPoundFleshPickup)
 
@@ -2088,6 +2105,7 @@ mod:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, mod.onClearXRV)
 mod:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, mod.onClearGT)
 
 mod:AddCallback(ModCallbacks.MC_POST_BOMB_INIT, mod.onBombNumber2)
+mod:AddCallback(ModCallbacks.MC_POST_BOMB_INIT, mod.onBombMrMega)
 
 mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, mod.onFamiliarUpdateBFFS)
 mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, mod.onFamiliarUpdateHiveMind)
