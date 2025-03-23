@@ -62,6 +62,10 @@ local settings = {
     dead_bird = true,
     fanny_pack = true,
     mr_mega = true,
+    money_equals_power = true,
+    eye_drops = true,
+    birds_eye = true,
+    ghost_pepper = true,
 }
 
 local translation = {
@@ -121,6 +125,10 @@ local translation = {
     dead_bird = "Dead Bird",
     fanny_pack = "Fanny Pack",
     mr_mega = "Mr Mega",
+    money_equals_power = "Money = Power",
+    eye_drops = "Eye Drops",
+    birds_eye = "Bird's Eye",
+    ghost_pepper = "Ghost Pepper",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -228,6 +236,10 @@ local PoundOfFleshItem = CollectibleType.COLLECTIBLE_POUND_OF_FLESH
 local DeadBirdItem = CollectibleType.COLLECTIBLE_DEAD_BIRD
 local FannyPackItem = CollectibleType.COLLECTIBLE_FANNY_PACK
 local MrMegaItem = CollectibleType.COLLECTIBLE_MR_MEGA
+local MoneyEqualsPowerItem = CollectibleType.COLLECTIBLE_MONEY_EQUALS_POWER
+local EyeDropsItem = CollectibleType.COLLECTIBLE_EYE_DROPS
+local BirdsEyeItem = CollectibleType.COLLECTIBLE_BIRDS_EYE
+local GhostPepperItem = CollectibleType.COLLECTIBLE_GHOST_PEPPER
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -289,6 +301,10 @@ local itemsDescriptions = {
     ["dead_bird"] = {DeadBirdItem, "{{ColorRainbow}}Spawns an extra bird when taking damage{{ColorRainbow}}"},
     ["fanny_pack"] = {FannyPackItem, "{{ColorRainbow}}Each copy has a 50% chance of dropping a random pickup{{ColorRainbow}}"},
     ["mr_mega"] = {MrMegaItem, "{{ColorRainbow}}Increases bomb damage by 25%{{ColorRainbow}}"},
+    ["money_equals_power"] = {MoneyEqualsPowerItem, "{{ColorRainbow}}Coins give 100% extra damage{{ColorRainbow}}"},
+    ["eye_drops"] = {EyeDropsItem, "{{ColorRainbow}}Further reduces tear delay by 0.5{{ColorRainbow}}"},
+    ["birds_eye"] = {BirdsEyeItem, "{{ColorRainbow}}Increases fire size by 50% and damage by 25%{{ColorRainbow}}"},
+    ["ghost_pepper"] = {GhostPepperItem, "{{ColorRainbow}}Increases fire size by 50% and damage by 25%{{ColorRainbow}}"},
 }
 
 
@@ -350,6 +366,8 @@ local pickupTypes = {
         { PickupVariant.PICKUP_BOMB, { BombSubType.BOMB_NORMAL, BombSubType.BOMB_GOLDEN, BombSubType.BOMB_GIGA } },
         { PickupVariant.PICKUP_HEART, { HeartSubType.HEART_FULL, HeartSubType.HEART_HALF, HeartSubType.HEART_SOUL, HeartSubType.HEART_BLACK, HeartSubType.HEART_GOLDEN, HeartSubType.HEART_BONE } },
 }
+
+local trackedFires = {}
 
 --- Checks if the player already has an active item in their pocket slot
 ---@param player EntityPlayer
@@ -476,10 +494,23 @@ function mod:evaluateCache(player, cacheFlags)
         if player:HasCollectible(BloodyLustItem) and settings.bloody_lust then
             player.Damage = player.Damage + bloody_lust_extra_damage
         end
+        if player:HasCollectible(MoneyEqualsPowerItem) and settings.money_equals_power then
+            local copyCount = player:GetCollectibleNum(MoneyEqualsPowerItem) - 1
+            if copyCount > 0 then
+                local coins = player:GetNumCoins()
+                player.Damage = player.Damage + 0.04 * coins * copyCount
+            end
+        end
     end
     if cacheFlags & CacheFlag.CACHE_FIREDELAY == CacheFlag.CACHE_FIREDELAY then
         if player:HasCollectible(BloodyGustItem) and settings.bloody_gust then
             player.MaxFireDelay = player.MaxFireDelay - (bloody_gust_extra_tears)
+        end
+        if player:HasCollectible(EyeDropsItem) and settings.eye_drops then
+            local copyCount = player:GetCollectibleNum(EyeDropsItem) - 1
+            if copyCount > 0 then
+                player.MaxFireDelay = player.MaxFireDelay - 0.5 * copyCount
+            end
         end
     end
     if cacheFlags & CacheFlag.CACHE_TEARFLAG == CacheFlag.CACHE_TEARFLAG then
@@ -2019,6 +2050,42 @@ function mod:onBombMrMega(bomb)
     bomb.ExplosionDamage = bomb.ExplosionDamage * extraMultiplier
 end
 
+--- Stacking BirdsEyeItem will increase fire size and damage
+--- @param entity Entity
+function mod:onPlayerRedFireSpawn(entity)
+    if not settings.birds_eye then
+        return
+    end
+    if entity.Variant ~= EffectVariant.RED_CANDLE_FLAME then return end
+
+    local player = entity.SpawnerEntity and entity.SpawnerEntity:ToPlayer()
+    if not player or not player:HasCollectible(BirdsEyeItem) then return end
+    local copyCount = player:GetCollectibleNum(BirdsEyeItem) - 1
+    if copyCount > 0 and not trackedFires[entity.InitSeed] then
+        entity.SpriteScale = Vector(copyCount * 0.5 + 1, copyCount * 0.5 + 1)
+        entity.CollisionDamage = entity.CollisionDamage * (1 + 0.25* copyCount)
+        trackedFires[entity.InitSeed] = true
+    end
+end
+
+--- Stacking GhostPepperItem will increase fire size and damage
+--- @param entity Entity
+function mod:onPlayerBlueFireSpawn(entity)
+    if not settings.ghost_pepper then
+        return
+    end
+    if entity.Variant ~= EffectVariant.BLUE_FLAME then return end
+
+    local player = entity.SpawnerEntity and entity.SpawnerEntity:ToPlayer()
+    if not player or not player:HasCollectible(GhostPepperItem) then return end
+    local copyCount = player:GetCollectibleNum(GhostPepperItem) - 1
+    if copyCount > 0 and not trackedFires[entity.InitSeed] then
+        entity.SpriteScale = Vector(copyCount * 0.5 + 1, copyCount * 0.5 + 1)
+        entity.CollisionDamage = entity.CollisionDamage * (1 + 0.25* copyCount)
+        trackedFires[entity.InitSeed] = true
+    end
+end
+
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onMomsPursePickup)
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onPoundFleshPickup)
 
@@ -2052,6 +2119,9 @@ mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageVengefulSpirit, Ent
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageDeadBird, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageFannyPack, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBossHungrySoul)
+
+mod:AddCallback(ModCallbacks.MC_POST_EFFECT_RENDER, mod.onPlayerRedFireSpawn)
+mod:AddCallback(ModCallbacks.MC_POST_EFFECT_RENDER, mod.onPlayerBlueFireSpawn)
 
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, mod.onDamageDealtMysteriousLiquid)
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, mod.onKillEnemy)

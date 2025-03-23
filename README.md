@@ -72,6 +72,10 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - Dead Bird
 - Fanny Pack
 - Mr Mega
+- Money = Power
+- Eye Drops
+- Bird's Eye
+- Ghost Pepper
 
 - **More items coming soon!**
 
@@ -84,6 +88,6 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - **TheTurtleMelon** – Ideas & Mod Thumbnail
 - **PixelPlz** – Boss rush & Hush door code for X-Ray Vision
 
-### Version: 2.36
+### Version: 2.37
 ### Tags: Lua, Items, Tweaks, Update
 
