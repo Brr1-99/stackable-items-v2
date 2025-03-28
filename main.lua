@@ -66,6 +66,7 @@ local settings = {
     eye_drops = true,
     birds_eye = true,
     ghost_pepper = true,
+    whore_of_babylon = true,
 }
 
 local translation = {
@@ -129,6 +130,7 @@ local translation = {
     eye_drops = "Eye Drops",
     birds_eye = "Bird's Eye",
     ghost_pepper = "Ghost Pepper",
+    whore_of_babylon = "Whore of Babylon",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -240,6 +242,7 @@ local MoneyEqualsPowerItem = CollectibleType.COLLECTIBLE_MONEY_EQUALS_POWER
 local EyeDropsItem = CollectibleType.COLLECTIBLE_EYE_DROPS
 local BirdsEyeItem = CollectibleType.COLLECTIBLE_BIRDS_EYE
 local GhostPepperItem = CollectibleType.COLLECTIBLE_GHOST_PEPPER
+local WhoreOfBabylonItem = CollectibleType.COLLECTIBLE_WHORE_OF_BABYLON
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -305,6 +308,7 @@ local itemsDescriptions = {
     ["eye_drops"] = {EyeDropsItem, "{{ColorRainbow}}Further reduces tear delay by 0.5{{ColorRainbow}}"},
     ["birds_eye"] = {BirdsEyeItem, "{{ColorRainbow}}Increases fire size by 50% and damage by 25%{{ColorRainbow}}"},
     ["ghost_pepper"] = {GhostPepperItem, "{{ColorRainbow}}Increases fire size by 50% and damage by 25%{{ColorRainbow}}"},
+    ["whore_of_babylon"] = {WhoreOfBabylonItem, "{{ColorRainbow}}Stats stack now when item is active{{ColorRainbow}}"},
 }
 
 
@@ -529,6 +533,32 @@ function mod:evaluateCache(player, cacheFlags)
             if copyCount > 0 then
                 player.TearHeight = player.TearHeight - 3.5 -- Add small range up
                 player.TearRange = player.TearRange + 40 -- Add small range up
+            end
+        end
+    end
+end
+
+--- Adjusts stats appropriately for items that change stats or tear effects
+---@param player EntityPlayer
+---@param cacheFlag CacheFlag
+function mod:evaluateCacheWhoreOfBabylon(player, cacheFlag)
+    if player:HasCollectible(WhoreOfBabylonItem) then
+        local copies = player:GetCollectibleNum(WhoreOfBabylonItem) - 1
+        local isEve = player:GetPlayerType() == PlayerType.PLAYER_EVE
+        local isActive = false
+
+        if isEve then
+            isActive = player:GetHearts() <= 2
+        else
+            isActive = player:GetHearts() <= 1
+        end
+
+        if isActive then
+            if cacheFlag == CacheFlag.CACHE_DAMAGE then
+                player.Damage = player.Damage + 1.5 * copies
+            end
+            if cacheFlag == CacheFlag.CACHE_SPEED then
+                player.MoveSpeed = player.MoveSpeed + 0.3 * copies
             end
         end
     end
@@ -2164,6 +2194,7 @@ mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, mod.onNewFloor)
 
 mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, mod.evaluateCache)
 mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, mod.onEvaluateCacheChocoMilk)
+mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, mod.evaluateCacheWhoreOfBabylon)
 
 mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.onNewRoom)
 mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.onNewRoomXRV)

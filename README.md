@@ -76,6 +76,7 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - Eye Drops
 - Bird's Eye
 - Ghost Pepper
+- Whore Of Babylon
 
 - **More items coming soon!**
 
@@ -88,6 +89,6 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - **TheTurtleMelon** – Ideas & Mod Thumbnail
 - **PixelPlz** – Boss rush & Hush door code for X-Ray Vision
 
-### Version: 2.37
+### Version: 2.38
 ### Tags: Lua, Items, Tweaks, Update
 
