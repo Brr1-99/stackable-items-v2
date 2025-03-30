@@ -67,6 +67,7 @@ local settings = {
     birds_eye = true,
     ghost_pepper = true,
     whore_of_babylon = true,
+    brittle_bones = true,
 }
 
 local translation = {
@@ -131,6 +132,7 @@ local translation = {
     birds_eye = "Bird's Eye",
     ghost_pepper = "Ghost Pepper",
     whore_of_babylon = "Whore of Babylon",
+    brittle_bones = "Brittle Bones",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -243,6 +245,7 @@ local EyeDropsItem = CollectibleType.COLLECTIBLE_EYE_DROPS
 local BirdsEyeItem = CollectibleType.COLLECTIBLE_BIRDS_EYE
 local GhostPepperItem = CollectibleType.COLLECTIBLE_GHOST_PEPPER
 local WhoreOfBabylonItem = CollectibleType.COLLECTIBLE_WHORE_OF_BABYLON
+local BrittleBonesItem = CollectibleType.COLLECTIBLE_BRITTLE_BONES
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -309,6 +312,7 @@ local itemsDescriptions = {
     ["birds_eye"] = {BirdsEyeItem, "{{ColorRainbow}}Increases fire size by 50% and damage by 25%{{ColorRainbow}}"},
     ["ghost_pepper"] = {GhostPepperItem, "{{ColorRainbow}}Increases fire size by 50% and damage by 25%{{ColorRainbow}}"},
     ["whore_of_babylon"] = {WhoreOfBabylonItem, "{{ColorRainbow}}Stats stack now when item is active{{ColorRainbow}}"},
+    ["brittle_bones"] = {BrittleBonesItem, "{{ColorRainbow}}Further reduces tear delay when losing a bone heart{{ColorRainbow}}"},
 }
 
 
@@ -372,6 +376,7 @@ local pickupTypes = {
 }
 
 local trackedFires = {}
+local boneHearts = 0
 
 --- Checks if the player already has an active item in their pocket slot
 ---@param player EntityPlayer
@@ -2115,6 +2120,31 @@ function mod:onPlayerBlueFireSpawn(entity)
         trackedFires[entity.InitSeed] = true
     end
 end
+
+-- Stacking BrittleBonesItem will further reduce tear_delay when losing bone heart
+--- @param entity Entity
+function mod:onPlayerDamageBrittleBones(entity)
+    local player = entity:ToPlayer()
+    if player then
+        if player:GetBoneHearts() < boneHearts then
+            local copies = player:GetCollectibleNum(BrittleBonesItem) - 1
+            local extraTears = copies * 1
+            player.MaxFireDelay = player.MaxFireDelay - extraTears
+        end
+    end
+end
+-- Stacking BrittleBonesItem will further reduce tear_delay when losing bone heart
+--- @param entity Entity
+function mod:prePlayerDamageBrittleBones(entity)
+    local player = entity:ToPlayer()
+    if player then
+        local copies = player:GetCollectibleNum(BrittleBonesItem) - 1
+        if copies > 0 then boneHearts = player:GetBoneHearts() end
+    end
+end
+mod:AddCallback(ModCallbacks.MC_POST_ENTITY_TAKE_DMG, mod.onPlayerDamageBrittleBones, EntityType.ENTITY_PLAYER)
+mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.prePlayerDamageBrittleBones, EntityType.ENTITY_PLAYER)
+
 
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onMomsPursePickup)
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onPoundFleshPickup)
