@@ -78,6 +78,7 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - Ghost Pepper
 - Whore Of Babylon
 - Brittle Bones
+- Trisagion
 
 - **More items coming soon!**
 

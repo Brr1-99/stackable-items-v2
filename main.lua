@@ -68,6 +68,7 @@ local settings = {
     ghost_pepper = true,
     whore_of_babylon = true,
     brittle_bones = true,
+    trisagion = true,
 }
 
 local translation = {
@@ -133,6 +134,7 @@ local translation = {
     ghost_pepper = "Ghost Pepper",
     whore_of_babylon = "Whore of Babylon",
     brittle_bones = "Brittle Bones",
+    trisagion = "Trisagion",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -246,6 +248,7 @@ local BirdsEyeItem = CollectibleType.COLLECTIBLE_BIRDS_EYE
 local GhostPepperItem = CollectibleType.COLLECTIBLE_GHOST_PEPPER
 local WhoreOfBabylonItem = CollectibleType.COLLECTIBLE_WHORE_OF_BABYLON
 local BrittleBonesItem = CollectibleType.COLLECTIBLE_BRITTLE_BONES
+local TrisagionItem = CollectibleType.COLLECTIBLE_TRISAGION
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -313,6 +316,7 @@ local itemsDescriptions = {
     ["ghost_pepper"] = {GhostPepperItem, "{{ColorRainbow}}Increases fire size by 50% and damage by 25%{{ColorRainbow}}"},
     ["whore_of_babylon"] = {WhoreOfBabylonItem, "{{ColorRainbow}}Stats stack now when item is active{{ColorRainbow}}"},
     ["brittle_bones"] = {BrittleBonesItem, "{{ColorRainbow}}Further reduces tear delay when losing a bone heart{{ColorRainbow}}"},
+    ["trisagion"] = {TrisagionItem, "{{ColorRainbow}}Adds +10% chance of firing holy shot tears{{ColorRainbow}}"},
 }
 
 
@@ -538,6 +542,14 @@ function mod:evaluateCache(player, cacheFlags)
             if copyCount > 0 then
                 player.TearHeight = player.TearHeight - 3.5 -- Add small range up
                 player.TearRange = player.TearRange + 40 -- Add small range up
+            end
+        end
+    end
+    if cacheFlags & CacheFlag.CACHE_SHOTSPEED == CacheFlag.CACHE_SHOTSPEED then
+        if player:HasCollectible(TrisagionItem) and settings.trisagion then
+            local copyCount = player:GetCollectibleNum(TrisagionItem) - 1
+            if copyCount > 0 then
+                player.ShotSpeed = player.ShotSpeed - 0.05 -- Add small shot speed down
             end
         end
     end
