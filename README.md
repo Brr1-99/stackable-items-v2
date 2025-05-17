@@ -91,6 +91,6 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - **TheTurtleMelon** – Ideas & Mod Thumbnail
 - **PixelPlz** – Boss rush & Hush door code for X-Ray Vision
 
-### Version: 2.39
+### Version: 2.40
 ### Tags: Lua, Items, Tweaks, Update
 
