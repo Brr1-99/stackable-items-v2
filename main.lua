@@ -45,6 +45,7 @@ local settings = {
     phd = true,
     virgo = true,
     lucky_foot = true,
+    little_baggy = true,
     lump_of_coal = true,
     chocolate_milk = true,
     flat_stone = true,
@@ -69,6 +70,7 @@ local settings = {
     whore_of_babylon = true,
     brittle_bones = true,
     trisagion = true,
+    the_mind = true,
 }
 
 local translation = {
@@ -111,6 +113,7 @@ local translation = {
     phd = "PHD",
     virgo = "Virgo",
     lucky_foot = "Lucky Foot",
+    little_baggy = "Little Baggy",
     lump_of_coal = "Lump of Coal",
     chocolate_milk = "Chocolate Milk",
     flat_stone = "Flat Stone",
@@ -135,6 +138,7 @@ local translation = {
     whore_of_babylon = "Whore of Babylon",
     brittle_bones = "Brittle Bones",
     trisagion = "Trisagion",
+    the_mind = "The Mind",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -225,6 +229,7 @@ local SpelunkerHatItem = CollectibleType.COLLECTIBLE_SPELUNKER_HAT
 local PHDItem = CollectibleType.COLLECTIBLE_PHD
 local VirgoItem = CollectibleType.COLLECTIBLE_VIRGO
 local LuckyFootItem = CollectibleType.COLLECTIBLE_LUCKY_FOOT
+local LittleBaggyItem = CollectibleType.COLLECTIBLE_LITTLE_BAGGY
 local LumpOfCoalItem = CollectibleType.COLLECTIBLE_LUMP_OF_COAL
 local ChocolateMilkItem = CollectibleType.COLLECTIBLE_CHOCOLATE_MILK
 local FlatStoneItem = CollectibleType.COLLECTIBLE_FLAT_STONE
@@ -249,6 +254,7 @@ local GhostPepperItem = CollectibleType.COLLECTIBLE_GHOST_PEPPER
 local WhoreOfBabylonItem = CollectibleType.COLLECTIBLE_WHORE_OF_BABYLON
 local BrittleBonesItem = CollectibleType.COLLECTIBLE_BRITTLE_BONES
 local TrisagionItem = CollectibleType.COLLECTIBLE_TRISAGION
+local TheMindItem = CollectibleType.COLLECTIBLE_MIND
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -293,6 +299,7 @@ local itemsDescriptions = {
     ["phd"] = {PHDItem, "{{ColorRainbow}}Transforms all {{Pill}} pills into horse pills{{ColorRainbow}}"},
     ["virgo"] = {VirgoItem, "{{ColorRainbow}}Transforms all {{Pill}} pills into horse pills{{ColorRainbow}}"},
     ["lucky_foot"] = {LuckyFootItem, "{{ColorRainbow}}Transforms all {{Pill}} pills into horse pills{{ColorRainbow}}"},
+    ["little_baggy"] = {LittleBaggyItem, "{{ColorRainbow}}Transforms all {{Pill}} pills into horse pills{{ColorRainbow}}"},
     ["lump_of_coal"] = {LumpOfCoalItem, "{{ColorRainbow}}{{ArrowUp}} +1 Tear range{{ColorRainbow}}"},
     ["chocolate_milk"] = {ChocolateMilkItem, "{{ColorRainbow}}{{ArrowUp}} +25% Tear damage{{ColorRainbow}}"},
     ["flat_stone"] = {FlatStoneItem, "{{ColorRainbow}}Spawns 2 tears on bounce that deal 40% of base damage{{ColorRainbow}}"},
@@ -317,6 +324,7 @@ local itemsDescriptions = {
     ["whore_of_babylon"] = {WhoreOfBabylonItem, "{{ColorRainbow}}Stats stack now when item is active{{ColorRainbow}}"},
     ["brittle_bones"] = {BrittleBonesItem, "{{ColorRainbow}}Further reduces tear delay when losing a bone heart{{ColorRainbow}}"},
     ["trisagion"] = {TrisagionItem, "{{ColorRainbow}}Adds +10% chance of firing holy shot tears{{ColorRainbow}}"},
+    ["the_mind"] = {TheMindItem, "{{ColorRainbow}}Also shows {{UltraSecretRoom}} ultra secret room on the map{{ColorRainbow}}"},
 }
 
 
@@ -1517,7 +1525,8 @@ function mod:onUpdateHorsePills()
         local copyCountPHD = player:GetCollectibleNum(PHDItem) - 1
         local copyCountVirgo = player:GetCollectibleNum(VirgoItem) - 1
         local copyCountLuckyFoot = player:GetCollectibleNum(LuckyFootItem) - 1
-        if copyCountPHD > 0 or copyCountVirgo > 0 or copyCountLuckyFoot > 0  then
+        local copyCountLittleBaggy = player:GetCollectibleNum(LittleBaggyItem) - 1
+        if copyCountPHD > 0 or copyCountVirgo > 0 or copyCountLuckyFoot > 0  or copyCountLittleBaggy > 0 then
             local pillColor = player:GetPill(0)
             if pillColor ~= PillColor.PILL_NULL then
                 player.SetPill(player, 0, pillColor | PillColor.PILL_GIANT_FLAG)
@@ -1542,7 +1551,8 @@ function mod:OnPlayerGetsPill(_, _, player)
     local copyCountPHD = player:GetCollectibleNum(PHDItem) - 1
     local copyCountVirgo = player:GetCollectibleNum(VirgoItem) - 1
     local copyCountLuckyFoot = player:GetCollectibleNum(LuckyFootItem) - 1
-    if copyCountPHD > 0 or copyCountVirgo > 0 or copyCountLuckyFoot > 0  then
+    local copyCountLittleBaggy = player:GetCollectibleNum(LittleBaggyItem) - 1
+    if copyCountPHD > 0 or copyCountVirgo > 0 or copyCountLuckyFoot > 0 or copyCountLittleBaggy > 0 then
         local pillColor = math.random(15) | PillColor.PILL_GIANT_FLAG
         player:AnimatePill(pillColor)
         player:AddPill(pillColor)
@@ -2133,6 +2143,36 @@ function mod:onPlayerBlueFireSpawn(entity)
     end
 end
 
+--- Stacking The Mind will show also the ultra secret room
+function mod:onUpdateTheMind()
+    if not settings.the_mind then
+        return
+    end
+    for i = 0, Game():GetNumPlayers() - 1 do
+        local player = Isaac.GetPlayer(i)
+        if player:HasCollectible(TheMindItem) then
+            local copyCount = player:GetCollectibleNum(TheMindItem) - 1
+            if copyCount > 0 then
+                local level = Game():GetLevel()
+                level:ApplyMapEffect()
+                level:ApplyCompassEffect(true)
+                level:ApplyBlueMapEffect()
+                for i = 0, 169 do
+                    local room = level:GetRoomByIdx(i)
+                    if room.Data and room.Data.Type == RoomType.ROOM_ULTRASECRET then
+                        if room.DisplayFlags & 1 << 2 == 0 then
+                            room.DisplayFlags = room.DisplayFlags | 1 << 2 -- Show Icon
+                            level:UpdateVisibility()
+                            level:RemoveCurses(1)
+                        end
+                        return
+                    end
+                end
+            end
+        end
+    end
+end
+
 -- Stacking BrittleBonesItem will further reduce tear_delay when losing bone heart
 --- @param entity Entity
 function mod:onPlayerDamageBrittleBones(entity)
@@ -2169,6 +2209,7 @@ mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateScapular)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateAnemic)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateToxicShockBoss)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateSpelunkerHat)
+mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateTheMind)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.postUpdateGnawedLeaf)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateBallOfTar)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateAquarius)

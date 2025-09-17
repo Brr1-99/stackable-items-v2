@@ -4,7 +4,8 @@
 The Binding of Isaac Mod that implements synergies on stacking items
 
 ## Description
-This mod is an updated version of the original Stackable Items mod, adding new stackable items. 
+This mod is an updated version of the original Stackable Items mod, adding new stackable items.
+**Repentogon & Repentance DLC Needed for this mod to work**
 
 [Original Mod](https://steamcommunity.com/sharedfiles/filedetails/?id=3063257113) by **kdogjake** – huge thanks for allowing updates! ❤️
 
@@ -79,6 +80,8 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - Whore Of Babylon
 - Brittle Bones
 - Trisagion
+- The Mind (does not stack infinitely)
+- Little Baggy (does not stack infinitely)
 
 - **More items coming soon!**
 
@@ -91,6 +94,6 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - **TheTurtleMelon** – Ideas & Mod Thumbnail
 - **PixelPlz** – Boss rush & Hush door code for X-Ray Vision
 
-### Version: 2.40
+### Version: 2.41
 ### Tags: Lua, Items, Tweaks, Update
 

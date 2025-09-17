@@ -8,7 +8,8 @@
 This mod is an updated version from the original stackable items mod which adds new stackable items
 https://steamcommunity.com/sharedfiles/filedetails/?id=3063257113
 [h1]Shout-out to kdogjake in the first place for creating the mod and for letting people update it ❤️[/h1]
-[h2]NOW WITH MOD CONFIG MENU SUPPORT! + REPENTOGON[/h2]
+[h1]REPENTOGON and Repentance DLC NEEDED for this mod to work[/h1]
+[h2]NOW WITH MOD CONFIG MENU SUPPORT![/h2]
 [h2]NOW WITH DESCRIPTIONS COMPATIBLE WITH EXTERNAL ITEM DESCRIPTIONS![/h2]
 
 [h1]Old Items[/h1]
@@ -77,6 +78,8 @@ https://steamcommunity.com/sharedfiles/filedetails/?id=3063257113
 - Whore Of Babylon
 - Brittle Bones
 - Trisagion
+- The Mind (does not stack infinitely)
+- Little Baggy (does not stack infinitely)
 (Currently working on Rubber Cement and a few more items, also making old items compatible with multiple players)
 
 [h2]Check out Hutts’ video on the mod here![/h2]
@@ -87,7 +90,7 @@ https://youtu.be/CShMxC-pfMA?si=-DBtW0t3D2tMEWcz
 - Hutts - Original Mod Idea
 - TheTurtleMelon - Ideas &amp; Mod Thumbnail
 - PixelPlz - Boss rush and Hush door code for X-Ray vision</description>
-    <version>2.40</version>
+    <version>2.41</version>
     <visibility>Public</visibility>
     <tag id="Lua"/>
     <tag id="Items"/>
