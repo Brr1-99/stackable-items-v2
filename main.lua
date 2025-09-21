@@ -72,6 +72,7 @@ local settings = {
     trisagion = true,
     the_mind = true,
     cambion_conception = true,
+    curse_of_the_tower = true,
 }
 
 local translation = {
@@ -141,6 +142,7 @@ local translation = {
     trisagion = "Trisagion",
     the_mind = "The Mind",
     cambion_conception = "Cambion Conception",
+    curse_of_the_tower = "Curse of the Tower",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -258,6 +260,7 @@ local BrittleBonesItem = CollectibleType.COLLECTIBLE_BRITTLE_BONES
 local TrisagionItem = CollectibleType.COLLECTIBLE_TRISAGION
 local TheMindItem = CollectibleType.COLLECTIBLE_MIND
 local CambionConceptionItem = CollectibleType.COLLECTIBLE_CAMBION_CONCEPTION
+local CurseOfTheTowerItem = CollectibleType.COLLECTIBLE_CURSE_OF_THE_TOWER
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -329,6 +332,7 @@ local itemsDescriptions = {
     ["trisagion"] = {TrisagionItem, "{{ColorRainbow}}Adds +10% chance of firing holy shot tears{{ColorRainbow}}"},
     ["the_mind"] = {TheMindItem, "{{ColorRainbow}}Also shows {{UltraSecretRoom}} ultra secret room on the map{{ColorRainbow}}"},
     ["cambion_conception"] = {CambionConceptionItem, "{{ColorRainbow}}Reduces the number of hits needed to obtain the familiar by 2 {{ColorRainbow}}"},
+    ["curse_of_the_tower"] = {CurseOfTheTowerItem, "{{ColorRainbow}}More bombs {{Bomb}} spawned when hit {{ColorRainbow}}"},
 }
 
 
@@ -395,6 +399,14 @@ local trackedFires = {}
 local boneHearts = 0
 local cambionConceptionHits = {15, 30, 60, 90}
 local savedCambionState = {0, 0, 0, 0, 0, 0, 0, 0}
+
+-- Self Damage Slot Machines
+local excludedSlotVariants = {
+    [2] = true,
+    [5] = true,
+    [15] = true,
+    [17] = true,
+}
 
 --- Checks if the player already has an active item in their pocket slot
 ---@param player EntityPlayer
@@ -2237,6 +2249,31 @@ function mod:onPostAddCollectible(type)
     end
 end
 
+-- Stacking Curse Of The Tower will spawn more troll bombs on extra copy
+function mod:onDamageCurseOfTheTower(entity, _, _, source, _)
+    if not settings.curse_of_the_tower then return end
+    local player = entity:ToPlayer()
+    if not player then
+        return
+    end
+    if not player:HasCollectible(CurseOfTheTowerItem) then
+        return
+    end
+
+    if source and source.Entity then
+        if source.Entity.Type == EntityType.ENTITY_SLOT and excludedSlotVariants[source.Entity.Variant] then
+            return
+        end
+    end
+
+    local copies = player:GetCollectibleNum(CurseOfTheTowerItem) - 1
+
+    local room = Game():GetRoom()
+    for i = 1, copies do
+        local spawnPos = room:FindFreePickupSpawnPosition(player.Position, 20)
+        Isaac.Spawn(EntityType.ENTITY_BOMB, BombVariant.BOMB_TROLL, 0, spawnPos, Vector.Zero, player)
+    end
+end
 
 -- Stacking BrittleBonesItem will further reduce tear_delay when losing bone heart
 --- @param entity Entity
@@ -2299,6 +2336,7 @@ mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageDeadBird, EntityTyp
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageFannyPack, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBossHungrySoul)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageCambionConception, EntityType.ENTITY_PLAYER)
+mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageCurseOfTheTower, EntityType.ENTITY_PLAYER)
 
 mod:AddCallback(ModCallbacks.MC_POST_EFFECT_RENDER, mod.onPlayerRedFireSpawn)
 mod:AddCallback(ModCallbacks.MC_POST_EFFECT_RENDER, mod.onPlayerBlueFireSpawn)

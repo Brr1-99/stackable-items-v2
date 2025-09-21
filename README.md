@@ -83,6 +83,7 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - The Mind (does not stack infinitely)
 - Little Baggy (does not stack infinitely)
 - Cambion Conception
+- Curse of the Tower
 
 - **More items coming soon!**
 
