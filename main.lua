@@ -71,6 +71,7 @@ local settings = {
     brittle_bones = true,
     trisagion = true,
     the_mind = true,
+    cambion_conception = true,
 }
 
 local translation = {
@@ -139,6 +140,7 @@ local translation = {
     brittle_bones = "Brittle Bones",
     trisagion = "Trisagion",
     the_mind = "The Mind",
+    cambion_conception = "Cambion Conception",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -255,6 +257,7 @@ local WhoreOfBabylonItem = CollectibleType.COLLECTIBLE_WHORE_OF_BABYLON
 local BrittleBonesItem = CollectibleType.COLLECTIBLE_BRITTLE_BONES
 local TrisagionItem = CollectibleType.COLLECTIBLE_TRISAGION
 local TheMindItem = CollectibleType.COLLECTIBLE_MIND
+local CambionConceptionItem = CollectibleType.COLLECTIBLE_CAMBION_CONCEPTION
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -325,6 +328,7 @@ local itemsDescriptions = {
     ["brittle_bones"] = {BrittleBonesItem, "{{ColorRainbow}}Further reduces tear delay when losing a bone heart{{ColorRainbow}}"},
     ["trisagion"] = {TrisagionItem, "{{ColorRainbow}}Adds +10% chance of firing holy shot tears{{ColorRainbow}}"},
     ["the_mind"] = {TheMindItem, "{{ColorRainbow}}Also shows {{UltraSecretRoom}} ultra secret room on the map{{ColorRainbow}}"},
+    ["cambion_conception"] = {CambionConceptionItem, "{{ColorRainbow}}Reduces the number of hits needed to obtain the familiar by 2 {{ColorRainbow}}"},
 }
 
 
@@ -389,6 +393,8 @@ local pickupTypes = {
 
 local trackedFires = {}
 local boneHearts = 0
+local cambionConceptionHits = {15, 30, 60, 90}
+local savedCambionState = {0, 0, 0, 0, 0, 0, 0, 0}
 
 --- Checks if the player already has an active item in their pocket slot
 ---@param player EntityPlayer
@@ -2173,6 +2179,65 @@ function mod:onUpdateTheMind()
     end
 end
 
+--- Stacking Cambion Conception will reduce the number of hits needed to obtain a familiar by 2
+function mod:onDamageCambionConception(entity)
+    local player = entity:ToPlayer()
+    if not player then
+        return
+    end
+    if not settings.cambion_conception then
+        return
+    end
+    if player:HasCollectible(CambionConceptionItem) then
+        local copyCount = player:GetCollectibleNum(CambionConceptionItem) - 1
+        if copyCount > 0 then
+            local currentHits = player:GetCambionConceptionState()
+            for _, baseThreshold in ipairs(cambionConceptionHits) do
+                local adjustedThreshold = baseThreshold - (2 * copyCount)
+                if adjustedThreshold < 1 then adjustedThreshold = 1 end
+                if currentHits >= (adjustedThreshold - 1) and currentHits < baseThreshold then
+                    player:SetCambionConceptionState(baseThreshold - 1)
+                    break
+                end
+            end
+        end
+    end
+end
+
+-- Callback before player obtains cambion conception (store current hits value)
+function mod:onPreAddCollectible(type)
+    if not settings.cambion_conception then
+        return
+    end
+    for i = 0, Game():GetNumPlayers() - 1 do
+        local player = Isaac.GetPlayer(i)
+        local copyCountCambionConception = player:GetCollectibleNum(CambionConceptionItem)
+        if copyCountCambionConception > 0 and type == CollectibleType.COLLECTIBLE_CAMBION_CONCEPTION then
+
+        local currentHits = player:GetCambionConceptionState()
+        savedCambionState[player.Index] = currentHits
+        end
+    end
+end
+
+-- Callback after player obtains cambion conception (maintain hits for extra copies)
+function mod:onPostAddCollectible(type)
+    if not settings.cambion_conception then
+        return
+    end
+    for i = 0, Game():GetNumPlayers() - 1 do
+        local player = Isaac.GetPlayer(i)
+        local copyCountCambionConception = player:GetCollectibleNum(CambionConceptionItem)
+        if copyCountCambionConception > 0 and type == CollectibleType.COLLECTIBLE_CAMBION_CONCEPTION then
+            if savedCambionState[player.Index] then
+                player:SetCambionConceptionState(savedCambionState[player.Index])
+                savedCambionState[player.Index] = nil
+            end
+        end
+    end
+end
+
+
 -- Stacking BrittleBonesItem will further reduce tear_delay when losing bone heart
 --- @param entity Entity
 function mod:onPlayerDamageBrittleBones(entity)
@@ -2197,9 +2262,10 @@ end
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_TAKE_DMG, mod.onPlayerDamageBrittleBones, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.prePlayerDamageBrittleBones, EntityType.ENTITY_PLAYER)
 
-
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onMomsPursePickup)
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onPoundFleshPickup)
+mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onPreAddCollectible)
+mod:AddCallback(ModCallbacks.MC_POST_ADD_COLLECTIBLE, mod.onPostAddCollectible)
 
 mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, mod.OnPlayerGetsPill, MomsBottleOfPillsItem)
 
@@ -2232,6 +2298,7 @@ mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageVengefulSpirit, Ent
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageDeadBird, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageFannyPack, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBossHungrySoul)
+mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageCambionConception, EntityType.ENTITY_PLAYER)
 
 mod:AddCallback(ModCallbacks.MC_POST_EFFECT_RENDER, mod.onPlayerRedFireSpawn)
 mod:AddCallback(ModCallbacks.MC_POST_EFFECT_RENDER, mod.onPlayerBlueFireSpawn)
