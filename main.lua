@@ -72,6 +72,7 @@ local settings = {
     trisagion = true,
     the_mind = true,
     cambion_conception = true,
+    immaculate_conception = true,
     curse_of_the_tower = true,
 }
 
@@ -142,6 +143,7 @@ local translation = {
     trisagion = "Trisagion",
     the_mind = "The Mind",
     cambion_conception = "Cambion Conception",
+    immaculate_conception = "Immaculate Conception",
     curse_of_the_tower = "Curse of the Tower",
 }
 
@@ -260,6 +262,7 @@ local BrittleBonesItem = CollectibleType.COLLECTIBLE_BRITTLE_BONES
 local TrisagionItem = CollectibleType.COLLECTIBLE_TRISAGION
 local TheMindItem = CollectibleType.COLLECTIBLE_MIND
 local CambionConceptionItem = CollectibleType.COLLECTIBLE_CAMBION_CONCEPTION
+local ImmaculateConceptionItem = CollectibleType.COLLECTIBLE_IMMACULATE_CONCEPTION
 local CurseOfTheTowerItem = CollectibleType.COLLECTIBLE_CURSE_OF_THE_TOWER
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
@@ -331,7 +334,8 @@ local itemsDescriptions = {
     ["brittle_bones"] = {BrittleBonesItem, "{{ColorRainbow}}Further reduces tear delay when losing a bone heart{{ColorRainbow}}"},
     ["trisagion"] = {TrisagionItem, "{{ColorRainbow}}Adds +10% chance of firing holy shot tears{{ColorRainbow}}"},
     ["the_mind"] = {TheMindItem, "{{ColorRainbow}}Also shows {{UltraSecretRoom}} ultra secret room on the map{{ColorRainbow}}"},
-    ["cambion_conception"] = {CambionConceptionItem, "{{ColorRainbow}}Reduces the number of hits needed to obtain the familiar by 2 {{ColorRainbow}}"},
+    ["cambion_conception"] = {CambionConceptionItem, "{{ColorRainbow}}Reduces the number of hits needed to obtain a familiar by 2 {{ColorRainbow}}"},
+    ["immaculate_conception"] = {ImmaculateConceptionItem, "{{ColorRainbow}}Reduces by 2 the hearts needed to trigger its effects {{ColorRainbow}}"},
     ["curse_of_the_tower"] = {CurseOfTheTowerItem, "{{ColorRainbow}}More bombs {{Bomb}} spawned when hit {{ColorRainbow}}"},
 }
 
@@ -398,7 +402,8 @@ local pickupTypes = {
 local trackedFires = {}
 local boneHearts = 0
 local cambionConceptionHits = {15, 30, 60, 90}
-local savedCambionState = {0, 0, 0, 0, 0, 0, 0, 0}
+local savedCambionConceptionState = {0, 0, 0, 0, 0, 0, 0, 0}
+local savedImmaculateConceptionState = {0, 0, 0, 0, 0, 0, 0, 0}
 
 -- Self Damage Slot Machines
 local excludedSlotVariants = {
@@ -2192,6 +2197,7 @@ function mod:onUpdateTheMind()
 end
 
 --- Stacking Cambion Conception will reduce the number of hits needed to obtain a familiar by 2
+--- @param entity Entity
 function mod:onDamageCambionConception(entity)
     local player = entity:ToPlayer()
     if not player then
@@ -2217,7 +2223,8 @@ function mod:onDamageCambionConception(entity)
 end
 
 -- Callback before player obtains cambion conception (store current hits value)
-function mod:onPreAddCollectible(type)
+--- @param type CollectibleType
+function mod:onCambionConceptionPickup(type)
     if not settings.cambion_conception then
         return
     end
@@ -2227,13 +2234,14 @@ function mod:onPreAddCollectible(type)
         if copyCountCambionConception > 0 and type == CollectibleType.COLLECTIBLE_CAMBION_CONCEPTION then
 
         local currentHits = player:GetCambionConceptionState()
-        savedCambionState[player.Index] = currentHits
+        savedCambionConceptionState[player.Index] = currentHits
         end
     end
 end
 
 -- Callback after player obtains cambion conception (maintain hits for extra copies)
-function mod:onPostAddCollectible(type)
+--- @param type CollectibleType
+function mod:postCambionConceptionPickup(type)
     if not settings.cambion_conception then
         return
     end
@@ -2241,15 +2249,93 @@ function mod:onPostAddCollectible(type)
         local player = Isaac.GetPlayer(i)
         local copyCountCambionConception = player:GetCollectibleNum(CambionConceptionItem)
         if copyCountCambionConception > 0 and type == CollectibleType.COLLECTIBLE_CAMBION_CONCEPTION then
-            if savedCambionState[player.Index] then
-                player:SetCambionConceptionState(savedCambionState[player.Index])
-                savedCambionState[player.Index] = nil
+            if savedCambionConceptionState[player.Index] then
+                player:SetCambionConceptionState(savedCambionConceptionState[player.Index])
+                savedCambionConceptionState[player.Index] = nil
             end
         end
     end
 end
 
+-- Callback when a player picks up a heart for Immaculate Conception
+--- @param player EntityPlayer
+function mod:onPickupHeartImmaculateConception(player)
+    if not settings.immaculate_conception then
+        return
+    end
+    if not player:HasCollectible(ImmaculateConceptionItem) then
+        return
+    end
+
+    local copyCount = player:GetCollectibleNum(ImmaculateConceptionItem) - 1
+
+    if copyCount > 0 then
+        local currentState = player:GetImmaculateConceptionState()
+
+        local adjustedThreshold = 15 - (2 * copyCount)
+        if adjustedThreshold < 0 then adjustedThreshold = 0 end
+        if currentState >= (adjustedThreshold - 1) and currentState < 15 then
+            player:SetImmaculateConceptionState(14)
+        end
+    end
+
+end
+
+-- Callback to detect a post update health pickup Immaculate Conception
+--- @param player EntityPlayer
+function mod:onPostPlayerUpdateImmaculateConception(player)
+
+    local data = player:GetData()
+    data.LastHeartsCount = data.LastHeartsCount or (player:GetHearts() + player:GetSoulHearts() + player:GetBlackHearts() + player:GetEternalHearts() + player:GetRottenHearts())
+    local currentHeartsCount = (player:GetHearts() + player:GetSoulHearts() + player:GetBlackHearts() + player:GetEternalHearts() + player:GetRottenHearts())
+
+    if currentHeartsCount > data.LastHeartsCount then
+        mod:onPickupHeartImmaculateConception(player)
+    end
+
+    data.LastHeartsCount = currentHeartsCount
+end
+
+-- Callback before player obtains immaculate conception (store current state value)
+--- @param type CollectibleType
+function mod:onImmaculateConceptionPickup(type)
+    if not settings.immaculate_conception then
+        return
+    end
+    for i = 0, Game():GetNumPlayers() - 1 do
+        local player = Isaac.GetPlayer(i)
+        local copyCountImmaculateConception = player:GetCollectibleNum(ImmaculateConceptionItem)
+        if copyCountImmaculateConception > 0 and type == CollectibleType.COLLECTIBLE_IMMACULATE_CONCEPTION then
+
+        local currentState = player:GetImmaculateConceptionState()
+        savedImmaculateConceptionState[player.Index] = currentState
+        end
+    end
+end
+
+-- Callback after player obtains immaculate conception (maintain state for extra copies)
+--- @param type CollectibleType
+function mod:postImmaculateConceptionPickup(type)
+    if not settings.immaculate_conception then
+        return
+    end
+    for i = 0, Game():GetNumPlayers() - 1 do
+        local player = Isaac.GetPlayer(i)
+        local copyCountImmaculateConception = player:GetCollectibleNum(ImmaculateConceptionItem)
+        if copyCountImmaculateConception > 0 and type == CollectibleType.COLLECTIBLE_IMMACULATE_CONCEPTION then
+            if savedImmaculateConceptionState[player.Index] then
+                player:SetImmaculateConceptionState(savedImmaculateConceptionState[player.Index])
+                Isaac.RenderText(tostring(savedImmaculateConceptionState[player.Index]), 100, 100, 0, 0, 0, 255)
+                savedImmaculateConceptionState[player.Index] = nil
+            end
+        end
+    end
+end
+
+
 -- Stacking Curse Of The Tower will spawn more troll bombs on extra copy
+--- @param entity Entity
+--- @param source EntityRef 
 function mod:onDamageCurseOfTheTower(entity, _, _, source, _)
     if not settings.curse_of_the_tower then return end
     local player = entity:ToPlayer()
@@ -2301,8 +2387,10 @@ mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.prePlayerDamageBrittleBones
 
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onMomsPursePickup)
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onPoundFleshPickup)
-mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onPreAddCollectible)
-mod:AddCallback(ModCallbacks.MC_POST_ADD_COLLECTIBLE, mod.onPostAddCollectible)
+mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onCambionConceptionPickup)
+mod:AddCallback(ModCallbacks.MC_POST_ADD_COLLECTIBLE, mod.postCambionConceptionPickup)
+mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onImmaculateConceptionPickup)
+mod:AddCallback(ModCallbacks.MC_POST_ADD_COLLECTIBLE, mod.postImmaculateConceptionPickup)
 
 mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, mod.OnPlayerGetsPill, MomsBottleOfPillsItem)
 
@@ -2320,6 +2408,7 @@ mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdatePurgatory)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onDevilDealPoundOfFlesh)
 
 mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, mod.onPlayerUpdateMonstrance)
+mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, mod.onPostPlayerUpdateImmaculateConception)
 
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamage, EntityType.ENTITY_PLAYER)
 

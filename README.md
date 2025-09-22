@@ -83,6 +83,7 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - The Mind (does not stack infinitely)
 - Little Baggy (does not stack infinitely)
 - Cambion Conception
+- Immaculate Conception
 - Curse of the Tower
 
 - **More items coming soon!**
@@ -96,6 +97,6 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - **TheTurtleMelon** – Ideas & Mod Thumbnail
 - **PixelPlz** – Boss rush & Hush door code for X-Ray Vision
 
-### Version: 2.42
+### Version: 2.44
 ### Tags: Lua, Items, Tweaks, Update
 

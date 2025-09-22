@@ -81,6 +81,7 @@ https://steamcommunity.com/sharedfiles/filedetails/?id=3063257113
 - The Mind (does not stack infinitely)
 - Little Baggy (does not stack infinitely)
 - Cambion Conception
+- Immaculate Conception
 - Curse of the Tower
 (Currently working on Rubber Cement and a few more items, also making old items compatible with multiple players)
 
@@ -92,7 +93,7 @@ https://youtu.be/CShMxC-pfMA?si=-DBtW0t3D2tMEWcz
 - Hutts - Original Mod Idea
 - TheTurtleMelon - Ideas &amp; Mod Thumbnail
 - PixelPlz - Boss rush and Hush door code for X-Ray vision</description>
-    <version>2.43</version>
+    <version>2.44</version>
     <visibility>Public</visibility>
     <tag id="Lua"/>
     <tag id="Items"/>
