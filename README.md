@@ -85,6 +85,7 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - Cambion Conception
 - Immaculate Conception
 - Curse of the Tower
+- Number One
 
 - **More items coming soon!**
 
@@ -97,6 +98,6 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - **TheTurtleMelon** – Ideas & Mod Thumbnail
 - **PixelPlz** – Boss rush & Hush door code for X-Ray Vision
 
-### Version: 2.44
+### Version: 2.45
 ### Tags: Lua, Items, Tweaks, Update
 

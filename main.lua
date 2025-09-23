@@ -74,6 +74,7 @@ local settings = {
     cambion_conception = true,
     immaculate_conception = true,
     curse_of_the_tower = true,
+    number_one = true,
 }
 
 local translation = {
@@ -145,6 +146,7 @@ local translation = {
     cambion_conception = "Cambion Conception",
     immaculate_conception = "Immaculate Conception",
     curse_of_the_tower = "Curse of the Tower",
+    number_one = "Number One",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -264,6 +266,7 @@ local TheMindItem = CollectibleType.COLLECTIBLE_MIND
 local CambionConceptionItem = CollectibleType.COLLECTIBLE_CAMBION_CONCEPTION
 local ImmaculateConceptionItem = CollectibleType.COLLECTIBLE_IMMACULATE_CONCEPTION
 local CurseOfTheTowerItem = CollectibleType.COLLECTIBLE_CURSE_OF_THE_TOWER
+local NumberOneItem = CollectibleType.COLLECTIBLE_NUMBER_ONE
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -337,6 +340,7 @@ local itemsDescriptions = {
     ["cambion_conception"] = {CambionConceptionItem, "{{ColorRainbow}}Reduces the number of hits needed to obtain a familiar by 2 {{ColorRainbow}}"},
     ["immaculate_conception"] = {ImmaculateConceptionItem, "{{ColorRainbow}}Reduces by 2 the hearts needed to trigger its effects {{ColorRainbow}}"},
     ["curse_of_the_tower"] = {CurseOfTheTowerItem, "{{ColorRainbow}}More bombs {{Bomb}} spawned when hit {{ColorRainbow}}"},
+    ["number_one"] = {NumberOneItem, "{{ColorRainbow}}Tears will produce a yellow puddle on contact with enemies which deals damage over time {{ColorRainbow}}"},
 }
 
 
@@ -1356,6 +1360,25 @@ function mod:onDamageDealtMysteriousLiquid(entity)
                     effect.SpriteScale = Vector(copyCount + 1, copyCount + 1)
                     effect.CollisionDamage = 1 + copyCount*2
                 end
+            end
+        end
+    end
+end
+
+--- Stacking NumberOne by making tears spawn a yellow creep pool
+--- @param entity Entity
+function mod:onKillEnemyNumberOne(entity)
+    if not settings.number_one then
+        return
+    end
+    for i = 0, Game():GetNumPlayers() - 1 do
+        local player = Isaac.GetPlayer(i)
+        if player:HasCollectible(NumberOneItem) then
+            local copyCount = player:GetCollectibleNum(NumberOneItem) - 1
+            if copyCount > 0 then
+                local creep = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.PLAYER_CREEP_HOLYWATER_TRAIL, 0, entity.Position, Vector(0,0), player)
+                creep.SpriteScale = Vector(1 + 0.3 * copyCount, 1 + 0.3 * copyCount)
+                creep.Color = Color(1, 1, 0, 1, 0, 0, 0)
             end
         end
     end
@@ -2431,6 +2454,7 @@ mod:AddCallback(ModCallbacks.MC_POST_EFFECT_RENDER, mod.onPlayerRedFireSpawn)
 mod:AddCallback(ModCallbacks.MC_POST_EFFECT_RENDER, mod.onPlayerBlueFireSpawn)
 
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, mod.onDamageDealtMysteriousLiquid)
+mod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, mod.onKillEnemyNumberOne)
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, mod.onKillEnemy)
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, mod.onKillInfestationTwo)
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, mod.onKillJumperCables)
