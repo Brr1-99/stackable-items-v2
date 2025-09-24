@@ -75,6 +75,7 @@ local settings = {
     immaculate_conception = true,
     curse_of_the_tower = true,
     number_one = true,
+    blanket = true,
 }
 
 local translation = {
@@ -147,6 +148,7 @@ local translation = {
     immaculate_conception = "Immaculate Conception",
     curse_of_the_tower = "Curse of the Tower",
     number_one = "Number One",
+    blanket = "Blanket",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -267,6 +269,7 @@ local CambionConceptionItem = CollectibleType.COLLECTIBLE_CAMBION_CONCEPTION
 local ImmaculateConceptionItem = CollectibleType.COLLECTIBLE_IMMACULATE_CONCEPTION
 local CurseOfTheTowerItem = CollectibleType.COLLECTIBLE_CURSE_OF_THE_TOWER
 local NumberOneItem = CollectibleType.COLLECTIBLE_NUMBER_ONE
+local BlanketItem = CollectibleType.COLLECTIBLE_BLANKET
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -341,6 +344,7 @@ local itemsDescriptions = {
     ["immaculate_conception"] = {ImmaculateConceptionItem, "{{ColorRainbow}}Reduces by 2 the hearts needed to trigger its effects {{ColorRainbow}}"},
     ["curse_of_the_tower"] = {CurseOfTheTowerItem, "{{ColorRainbow}}More bombs {{Bomb}} spawned when hit {{ColorRainbow}}"},
     ["number_one"] = {NumberOneItem, "{{ColorRainbow}}Tears will produce a yellow puddle on contact with enemies which deals damage over time {{ColorRainbow}}"},
+    ["blanket"] = {BlanketItem, "{{ColorRainbow}}Will give a one time shield per floor (similar to wooden cross trinket){{ColorRainbow}}"},
 }
 
 
@@ -408,6 +412,7 @@ local boneHearts = 0
 local cambionConceptionHits = {15, 30, 60, 90}
 local savedCambionConceptionState = {0, 0, 0, 0, 0, 0, 0, 0}
 local savedImmaculateConceptionState = {0, 0, 0, 0, 0, 0, 0, 0}
+local holy_card_given = {false, false, false, false, false, false, false, false}
 
 -- Self Damage Slot Machines
 local excludedSlotVariants = {
@@ -1068,6 +1073,7 @@ end
 --- Resets value of hits taken on current floor, extra damage from bloody lust, and extra tears from bloody gust
 function mod:onNewFloor()
     dropped_red_key = false
+    holy_card_given = {false, false, false, false, false, false, false, false}
     devil_price_updated = false
     local player = Isaac.GetPlayer(0)
     current_floor_hits_taken = 0
@@ -2396,6 +2402,7 @@ function mod:onPlayerDamageBrittleBones(entity)
         end
     end
 end
+
 -- Stacking BrittleBonesItem will further reduce tear_delay when losing bone heart
 --- @param entity Entity
 function mod:prePlayerDamageBrittleBones(entity)
@@ -2405,14 +2412,51 @@ function mod:prePlayerDamageBrittleBones(entity)
         if copies > 0 then boneHearts = player:GetBoneHearts() end
     end
 end
+
+--- Stacking Blanket will now give a one use shield per floor (similar to wooden cross)
+function mod:onUpdateBlanket()
+    if not settings.blanket then
+        return
+    end
+    for i = 0, Game():GetNumPlayers() - 1 do
+        local player = Isaac.GetPlayer(i)
+        if player:HasCollectible(BlanketItem) then
+            local copyCount = player:GetCollectibleNum(BlanketItem) - 1
+            if copyCount > 0 then
+                if holy_card_given[player.Index] == false then
+                    player:UseCard(Card.CARD_HOLY, UseFlag.USE_NOANNOUNCER)
+                    holy_card_given[player.Index] = true
+                end
+                return
+            end
+        end
+    end
+end
+
+--- Stacking Blanket will now give a one use shield per floor (similar to wooden cross)
+function mod:onNewFloorBlanket()
+    if not settings.blanket then
+        return
+    end
+    for i = 0, Game():GetNumPlayers() - 1 do
+        local player = Isaac.GetPlayer(i)
+        if player:HasCollectible(BlanketItem) then
+            local copyCount = player:GetCollectibleNum(BlanketItem) - 1
+            if copyCount > 0 then
+                holy_card_given[player.Index] = false
+            end
+        end
+    end
+end
+
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_TAKE_DMG, mod.onPlayerDamageBrittleBones, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.prePlayerDamageBrittleBones, EntityType.ENTITY_PLAYER)
 
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onMomsPursePickup)
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onPoundFleshPickup)
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onCambionConceptionPickup)
-mod:AddCallback(ModCallbacks.MC_POST_ADD_COLLECTIBLE, mod.postCambionConceptionPickup)
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onImmaculateConceptionPickup)
+mod:AddCallback(ModCallbacks.MC_POST_ADD_COLLECTIBLE, mod.postCambionConceptionPickup)
 mod:AddCallback(ModCallbacks.MC_POST_ADD_COLLECTIBLE, mod.postImmaculateConceptionPickup)
 
 mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, mod.OnPlayerGetsPill, MomsBottleOfPillsItem)
@@ -2429,6 +2473,7 @@ mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateBallOfTar)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateAquarius)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdatePurgatory)
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onDevilDealPoundOfFlesh)
+mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.onUpdateBlanket)
 
 mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, mod.onPlayerUpdateMonstrance)
 mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, mod.onPostPlayerUpdateImmaculateConception)
@@ -2492,6 +2537,7 @@ mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, mod.onNewFloorCR)
 mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, mod.onNewFloorEmptyHeart)
 mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, mod.onNewFloorSpelunkerHat)
 mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, mod.onNewFloor)
+mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, mod.onNewFloorBlanket)
 
 mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, mod.evaluateCache)
 mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, mod.onEvaluateCacheChocoMilk)
