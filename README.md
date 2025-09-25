@@ -87,6 +87,7 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - Curse of the Tower
 - Number One
 - Blanket
+- Zodiac
 
 - **More items coming soon!**
 
@@ -99,6 +100,6 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - **TheTurtleMelon** – Ideas & Mod Thumbnail
 - **PixelPlz** – Boss rush & Hush door code for X-Ray Vision
 
-### Version: 2.46
+### Version: 2.47
 ### Tags: Lua, Items, Tweaks, Update
 

@@ -76,6 +76,7 @@ local settings = {
     curse_of_the_tower = true,
     number_one = true,
     blanket = true,
+    zodiac = true,
 }
 
 local translation = {
@@ -149,6 +150,7 @@ local translation = {
     curse_of_the_tower = "Curse of the Tower",
     number_one = "Number One",
     blanket = "Blanket",
+    zodiac = "Zodiac",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -270,6 +272,7 @@ local ImmaculateConceptionItem = CollectibleType.COLLECTIBLE_IMMACULATE_CONCEPTI
 local CurseOfTheTowerItem = CollectibleType.COLLECTIBLE_CURSE_OF_THE_TOWER
 local NumberOneItem = CollectibleType.COLLECTIBLE_NUMBER_ONE
 local BlanketItem = CollectibleType.COLLECTIBLE_BLANKET
+local ZodiacItem = CollectibleType.COLLECTIBLE_ZODIAC
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -345,6 +348,7 @@ local itemsDescriptions = {
     ["curse_of_the_tower"] = {CurseOfTheTowerItem, "{{ColorRainbow}}More bombs {{Bomb}} spawned when hit {{ColorRainbow}}"},
     ["number_one"] = {NumberOneItem, "{{ColorRainbow}}Tears will produce a yellow puddle on contact with enemies which deals damage over time {{ColorRainbow}}"},
     ["blanket"] = {BlanketItem, "{{ColorRainbow}}Will give a one time shield per floor (similar to wooden cross trinket){{ColorRainbow}}"},
+    ["zodiac"] = {ZodiacItem, "{{ColorRainbow}}Will give an extra random effect for each additional copy{{ColorRainbow}}"},
 }
 
 
@@ -421,6 +425,23 @@ local excludedSlotVariants = {
     [15] = true,
     [17] = true,
 }
+
+local zodiacEffectsList = {
+    CollectibleType.COLLECTIBLE_ARIES,
+    CollectibleType.COLLECTIBLE_TAURUS,
+    CollectibleType.COLLECTIBLE_GEMINI,
+    CollectibleType.COLLECTIBLE_CANCER,
+    CollectibleType.COLLECTIBLE_LEO,
+    CollectibleType.COLLECTIBLE_VIRGO,
+    CollectibleType.COLLECTIBLE_LIBRA,
+    CollectibleType.COLLECTIBLE_SCORPIO,
+    CollectibleType.COLLECTIBLE_SAGITTARIUS,
+    CollectibleType.COLLECTIBLE_CAPRICORN,
+    CollectibleType.COLLECTIBLE_AQUARIUS,
+    CollectibleType.COLLECTIBLE_PISCES
+}
+
+local playerExtraZodiacs = {nil, nil, nil, nil, nil, nil, nil, nil}
 
 --- Checks if the player already has an active item in their pocket slot
 ---@param player EntityPlayer
@@ -2449,6 +2470,94 @@ function mod:onNewFloorBlanket()
     end
 end
 
+--- Removes extra effects of Zodiac
+--- @param player EntityPlayer
+local function RemoveExtraZodiacEffects(player)
+    if not playerExtraZodiacs[player.Index] then return end
+    for _, effect in ipairs(playerExtraZodiacs[player.Index]) do
+        player:RemoveCollectible(effect, false, ActiveSlot.SLOT_POCKET)
+    end
+    playerExtraZodiacs[player.Index] = nil
+end
+
+--- Stacking Zodiac now gives a new effect for each extra copy
+--- @param player EntityPlayer
+local function ApplyZodiacStacking(player)
+
+    local copies = player:GetCollectibleNum(ZodiacItem)
+    local baseEffect = player:GetZodiacEffect()
+
+    RemoveExtraZodiacEffects(player)
+
+    if copies <= 1 then return end
+
+    local extraCopies = copies - 1
+
+    local availableEffects = {}
+    for _, effect in ipairs(zodiacEffectsList) do
+        if effect ~= baseEffect then
+            table.insert(availableEffects, effect)
+        end
+    end
+
+    math.randomseed(Game():GetFrameCount() + player.Index * 289)
+
+    local assignedEffects = {}
+    for i = 1, extraCopies do
+        if #availableEffects == 0 then break end
+        local idx = math.random(#availableEffects)
+        local effectToAdd = availableEffects[idx]
+        table.insert(assignedEffects, effectToAdd)
+        table.remove(availableEffects, idx)
+    end
+
+    for _, effect in ipairs(assignedEffects) do
+        player:AddInnateCollectible(effect)
+    end
+
+    playerExtraZodiacs[player.Index] = assignedEffects
+end
+
+--- Check to apply the zodiac effect on pickup
+---@param type EntityType
+---@param player EntityPlayer
+function mod:onZodiacPickup(type, _, _, _, _, player)
+    if type ~= ZodiacItem then return end
+    if player:HasCollectible(ZodiacItem) then
+        local copyCount = player:GetCollectibleNum(ZodiacItem) - 1
+        if copyCount > 0 then
+            ApplyZodiacStacking(player)
+        end
+    end
+end
+
+-- Give extra Zodiac effects as the new level starts
+function mod:onPostNewLevel()
+    for i=0, Game():GetNumPlayers()-1 do
+        local player = Isaac.GetPlayer(i)
+        if player:HasCollectible(ZodiacItem) then
+            local copyCount = player:GetCollectibleNum(ZodiacItem) - 1
+            if copyCount > 0 then
+                ApplyZodiacStacking(player)
+            end
+        end
+    end
+end
+mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, mod.onPostNewLevel)
+
+-- Remove extra Zodiac effects before new level 
+function mod:onPreLevelInitZodiac()
+    for i=0, Game():GetNumPlayers()-1 do
+        local player = Isaac.GetPlayer(i)
+        if player:HasCollectible(ZodiacItem) then
+            local copyCount = player:GetCollectibleNum(ZodiacItem) - 1
+            if copyCount > 0 then
+                RemoveExtraZodiacEffects(player)
+            end
+        end
+    end
+end
+
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_TAKE_DMG, mod.onPlayerDamageBrittleBones, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.prePlayerDamageBrittleBones, EntityType.ENTITY_PLAYER)
 
@@ -2456,6 +2565,7 @@ mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onMomsPursePickup)
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onPoundFleshPickup)
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onCambionConceptionPickup)
 mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onImmaculateConceptionPickup)
+mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, mod.onZodiacPickup)
 mod:AddCallback(ModCallbacks.MC_POST_ADD_COLLECTIBLE, mod.postCambionConceptionPickup)
 mod:AddCallback(ModCallbacks.MC_POST_ADD_COLLECTIBLE, mod.postImmaculateConceptionPickup)
 
@@ -2557,5 +2667,7 @@ mod:AddCallback(ModCallbacks.MC_POST_BOMB_INIT, mod.onBombMrMega)
 
 mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, mod.onFamiliarUpdateBFFS)
 mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, mod.onFamiliarUpdateHiveMind)
+
+mod:AddCallback(ModCallbacks.MC_PRE_LEVEL_INIT, mod.onPreLevelInitZodiac)
 
 mod:setupMyModConfigMenuSettings()
