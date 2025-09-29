@@ -77,6 +77,7 @@ local settings = {
     number_one = true,
     blanket = true,
     zodiac = true,
+    habit = true,
 }
 
 local translation = {
@@ -151,6 +152,7 @@ local translation = {
     number_one = "Number One",
     blanket = "Blanket",
     zodiac = "Zodiac",
+    habit = "Habit",
 }
 
 function mod:setupMyModConfigMenuSettings()
@@ -273,6 +275,7 @@ local CurseOfTheTowerItem = CollectibleType.COLLECTIBLE_CURSE_OF_THE_TOWER
 local NumberOneItem = CollectibleType.COLLECTIBLE_NUMBER_ONE
 local BlanketItem = CollectibleType.COLLECTIBLE_BLANKET
 local ZodiacItem = CollectibleType.COLLECTIBLE_ZODIAC
+local HabitItem = CollectibleType.COLLECTIBLE_HABIT
 ---
 local BrimstoneItem = CollectibleType.COLLECTIBLE_BRIMSTONE
 local TechnologyItem = CollectibleType.COLLECTIBLE_TECHNOLOGY
@@ -347,8 +350,9 @@ local itemsDescriptions = {
     ["immaculate_conception"] = {ImmaculateConceptionItem, "{{ColorRainbow}}Reduces by 2 the hearts needed to trigger its effects {{ColorRainbow}}"},
     ["curse_of_the_tower"] = {CurseOfTheTowerItem, "{{ColorRainbow}}More bombs {{Bomb}} spawned when hit {{ColorRainbow}}"},
     ["number_one"] = {NumberOneItem, "{{ColorRainbow}}Tears will produce a yellow puddle on contact with enemies which deals damage over time {{ColorRainbow}}"},
-    ["blanket"] = {BlanketItem, "{{ColorRainbow}}Will give a one time shield per floor (similar to wooden cross trinket){{ColorRainbow}}"},
-    ["zodiac"] = {ZodiacItem, "{{ColorRainbow}}Will give an extra random effect for each additional copy{{ColorRainbow}}"},
+    ["blanket"] = {BlanketItem, "{{ColorRainbow}}Gives a one time shield per floor (similar to wooden cross trinket){{ColorRainbow}}"},
+    ["zodiac"] = {ZodiacItem, "{{ColorRainbow}}Gives an extra random effect for each additional copy{{ColorRainbow}}"},
+    ["habit"] = {HabitItem, "{{ColorRainbow}}Gives an extra bar of charge when taking damage{{ColorRainbow}}"},
 }
 
 
@@ -2558,6 +2562,20 @@ function mod:onPreLevelInitZodiac()
     end
 end
 
+-- Stacking HabitItem gives an extra bar of charge
+---@param entity Entity
+function mod:onDamageHabit(entity)
+    local player = entity:ToPlayer()
+    if player then
+        if player:HasCollectible(HabitItem) then
+            local copyCount = player:GetCollectibleNum(HabitItem) - 1
+            if copyCount > 0 then
+                player:AddActiveCharge(copyCount, ActiveSlot.SLOT_PRIMARY, true, false, true)
+            end
+        end
+    end
+end
+
 mod:AddCallback(ModCallbacks.MC_POST_ENTITY_TAKE_DMG, mod.onPlayerDamageBrittleBones, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.prePlayerDamageBrittleBones, EntityType.ENTITY_PLAYER)
 
@@ -2604,6 +2622,7 @@ mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageFannyPack, EntityTy
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageBossHungrySoul)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageCambionConception, EntityType.ENTITY_PLAYER)
 mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageCurseOfTheTower, EntityType.ENTITY_PLAYER)
+mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, mod.onDamageHabit, EntityType.ENTITY_PLAYER)
 
 mod:AddCallback(ModCallbacks.MC_POST_EFFECT_RENDER, mod.onPlayerRedFireSpawn)
 mod:AddCallback(ModCallbacks.MC_POST_EFFECT_RENDER, mod.onPlayerBlueFireSpawn)

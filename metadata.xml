@@ -86,6 +86,7 @@ https://steamcommunity.com/sharedfiles/filedetails/?id=3063257113
 - Number One
 - Blanket
 - Zodiac
+- Habit
 (Currently working on Rubber Cement and a few more items, also making old items compatible with multiple players)
 
 [h2]Check out Hutts’ video on the mod here![/h2]
@@ -95,8 +96,9 @@ https://youtu.be/CShMxC-pfMA?si=-DBtW0t3D2tMEWcz
 - kdogjake - Original Mod Creator https://twitter.com/kd0gjake
 - Hutts - Original Mod Idea
 - TheTurtleMelon - Ideas &amp; Mod Thumbnail
-- PixelPlz - Boss rush and Hush door code for X-Ray vision</description>
-    <version>2.47</version>
+- PixelPlz - Boss rush and Hush door code for X-Ray vision
+- PhotoFinn - Code for Habit and Fanny Pack</description>
+    <version>2.48</version>
     <visibility>Public</visibility>
     <tag id="Lua"/>
     <tag id="Items"/>

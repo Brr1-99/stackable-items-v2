@@ -88,6 +88,7 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - Number One
 - Blanket
 - Zodiac
+- Habit
 
 - **More items coming soon!**
 
@@ -99,6 +100,7 @@ This mod is an updated version of the original Stackable Items mod, adding new s
 - **Hutts** – Original Mod Idea
 - **TheTurtleMelon** – Ideas & Mod Thumbnail
 - **PixelPlz** – Boss rush & Hush door code for X-Ray Vision
+- **PhotoFinn** - Code for Habit and Fanny Pack
 
 ### Version: 2.47
 ### Tags: Lua, Items, Tweaks, Update
